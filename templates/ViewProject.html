@@ -1,0 +1,86 @@
+{% extends "UserMaster.html" %}
+
+{% block content %}
+
+<section class="content-header">
+    <h1>View My Projects</h1>
+</section>
+
+<section class="content">
+  <div class="box box-default">   
+    <div class="box-header with-border">
+      <h3 class="box-title">Manage Project</h3><br><br>
+      <form method="GET" action="/CreateProject" style="display: inline-block;">
+        <button type="submit" class="btn btn-primary">
+          <i class="fa fa-plus-circle"></i> Create Project</button>
+      </form>
+    
+      <div class="box-tools pull-right">
+        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-remove"></i></button>
+      </div>
+    </div> 
+      <div class="box-body">
+        <div class="row">
+              <div class="col-md-2">             
+                  <div class="form-group">
+                    <label class="control-label" style="font-size: initial; padding-top: 5%;">Filter By Role : </label>
+                  </div>              
+                </div>
+                <form action="/ViewProject" method="POST"> 
+                  <input type="hidden" name="purpose" value="filter">
+              <div class="col-md-3">
+                  <select name="roleType" class="form-control select2" style="width: 100%;">       
+                      <option {% if roleType=='All' %} selected {% endif %} >All</option>
+                      <option {% if roleType=='Leader' %} selected {% endif %}>Leader</option>
+                    <option {% if roleType=='Member' %} selected {% endif %}>Member</option>
+                  </select>
+                </div>
+                
+                <div class="col-md-3">
+                  <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+          </div>
+        </div>
+  </div>
+
+    <div class="row">
+        {% for team in projectsList %}      
+        <div class="col-md-4">
+            <!-- small box -->
+            {%if team[2] == false %}
+            <div class="small-box bg-green">
+            {%else%}
+            <div class="small-box bg-yellow">
+            {%endif%}   
+              <div class="inner">
+                <h3>{{team[6]}}</h3>
+
+                {%if team[2] == true %}
+                <p>Team Name : {{team[8]}}
+                    <br>
+                    Role : Leader
+                </p>
+                {%else%}
+                <p>Team Name : {{team[8]}}
+                    <br>
+                    Role : Member
+                </p>
+                {%endif%}
+              </div>
+              <div class="icon">
+                {%if team[2] == false %}
+                <i class="fa fa-user"></i>
+                {%else%}
+                <i class="fa fa-users"></i>
+                {%endif%}
+              </div>
+              <a href="{{ url_for('ViewMembers', teamName = team[8], projectID = team[4], projectName = team[6]) }}" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+            </div>
+          </div>
+          {%endfor%}
+    </div>
+</form>
+</section>
+
+{% endblock %}

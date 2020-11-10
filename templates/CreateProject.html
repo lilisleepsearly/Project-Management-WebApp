@@ -1,0 +1,171 @@
+{% extends "UserMaster.html" %}
+
+{% block content %}
+
+<section class="content-header">
+    <h1>Create Project</h1>
+</section>
+
+<section class="content">
+  {% for message in get_flashed_messages() %}
+  <div class="box box-solid" style="background-color:#a3e4a3 ; height: 100%;">
+    <div class="box-header text-center">
+      <h3 class="box-title" style="color: black; font-family:inherit; font-size: medium;"> {{message}}</h3>
+
+      <div class="box-tools pull-right">
+        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times" style="color:darkgreen;background-color: transparent;"></i></button>    
+      </div>
+      <!-- /.box-tools -->
+    </div>
+  </div>
+  {% endfor %}
+    <div class="box box-primary">   
+        <div class="box-header with-border">
+          <h3 class="box-title">New Project</h3>
+        </div> 
+        
+          <div class="box-body">
+            <div class="row">
+                <div class="col-md-2">             
+                    <div class="form-group">
+                      <label class="control-label" style="font-size: initial;">Project Name : </label>
+                    </div>              
+                  </div>
+                 
+                <div class="col-md-3">
+                      <input type="text" name="txtProjName" id="tbProjectName" class="form-control" required>
+                  </div>
+            </div>
+            <div class="row">
+                <div class="col-md-2">             
+                    <div class="form-group">
+                      <label class="control-label" style="font-size: initial;">Description : </label>
+                    </div>              
+                  </div>
+                 
+                <div class="col-md-3">
+                      <textarea name="txtProjectDescription" id="tbProjectName" class="form-control" required></textarea>
+                  </div>
+                  
+            </div>
+            <br>
+            <div class="row">
+                  <div class="col-md-2">             
+                      <div class="form-group">
+                        <label class="control-label" style="font-size: initial;">Team Name : </label>
+                      </div>              
+                    </div>
+                   
+                  <div class="col-md-3">
+                        <input type="text" name="txtTeamName" id="tbTeamName" class="form-control" required>
+                    </div>
+              </div>
+              <hr>
+                <label>Add Members</label>
+                <table class="table table-bordered table-hover" id="tbl">
+                    <thead>
+                    <tr>
+                      <th>User Email</th>
+                      <th>Full Name</th>
+                      <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                      {% for value in usersList %}
+                      <tr>
+                        <td>{{value[0]}}</td>
+                        <td>{{value[2]}} {{value[3]}}</td>
+                        <td>
+                            <button type="submit" id="{{value[0]}}" value="{{value[4]}} {{value[5]}}" onclick="changeButtonStyle('{{value[0]}}')" class="btn btn-success"> 
+                                <i class="fa fa-plus"></i> Invite
+                            </button>
+
+                            <button type="submit" id="{{value[4]}} {{value[5]}}" onclick="displayInvite('{{value[0]}}')" style="display: none;" class="btn btn-danger"> 
+                                <i class="fa fa-remove"></i> Uninvite
+                            </button>
+                        </td>                 
+                      </tr>
+                      {%endfor%}
+                    </tbody>
+                  </table>
+                  <hr>
+                  <form action="/CreateTeam" method="POST" style="display: inline-block;">
+                    <input type="hidden" id="memberEmail" name="emails">
+                    <input type="hidden" id="teamName" name="teamName">
+                    <button type="submit" class="btn btn-primary"> 
+                        Submit
+                    </button>
+                    </form>
+                  <form action="/ViewProject" action="GET" style="display: inline-block;">
+                    <button type="submit" class="btn btn-default"> 
+                        Back
+                      </button>
+                </form>
+
+      </div>
+</section>
+<script>
+    var invitedMembers = [];
+    function changeButtonStyle(memberEmail) {    
+        invitedMembers.push(memberEmail);
+        document.getElementById('memberEmail').value = invitedMembers.toString();   
+        document.getElementById(memberEmail).style.display = "none";
+        var memberName = document.getElementById(memberEmail).value;
+        document.getElementById(memberName).style.display = "block";
+    }
+
+    function displayInvite(memberEmail){
+        var index = invitedMembers.indexOf(memberEmail);
+        if (index > -1) {
+            invitedMembers.splice(index, 1);
+        }
+        document.getElementById(memberEmail).style.display = "block";
+        var memberName = document.getElementById(memberEmail).value;
+        document.getElementById(memberName).style.display = "none";
+
+        document.getElementById('memberEmail').value = invitedMembers.toString();  
+    }
+
+    document.getElementById('tbTeamName').addEventListener("change",function () {
+      document.getElementById('teamName').value = document.getElementById('tbTeamName').value;
+    })
+  </script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script>
+  $(function () {
+    $('#tbl').DataTable({
+      'paging'      : true,
+      'lengthChange': false,
+      'searching'   : true,
+      'ordering'    : true,
+      'info'        : true,
+      'autoWidth'   : false
+    })
+  })
+</script>
+<style>
+    #tbl_filter{
+        float:left;
+
+    }
+
+    div.dataTables_wrapper div.dataTables_filter input{
+        width: 100%;
+        height: 34px;
+        border-radius: 0;
+        box-shadow: none;
+        padding : 6px 12px;
+        font-size: 14px;
+        line-height:1.42857143;
+        border:1px solid #ccc;
+        border-color: #d2d6de;
+    }
+    /* .tbl{
+        border-radius: 0;
+        box-shadow: none;
+        border-color: #d2d6de;
+    } */
+</style>
+
+{% endblock %}

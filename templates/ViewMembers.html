@@ -1,0 +1,136 @@
+{% extends "UserMaster.html" %}
+
+{% block content %}
+
+<section class="content-header">
+    <h1>View Team {{teamName}} Members</h1>
+</section>
+
+<section class="content">
+
+    <div class="row">
+        <div class="col-xs-12">
+          <div class="box" style="margin-top: 1%;">
+            <div class="box-header">
+              {%if currentUserRole == True %}       
+                <button type="submit" class="btn btn-danger" data-toggle="modal" data-target="#modal-dismiss">
+                  <i class="fa fa-user-times"></i>
+                  Dismiss Team
+                </button> 
+                <br><br>
+              {%endif%}
+                
+              <label style="font-size:16pt; margin-bottom: -20pt; font-weight: normal;">Project Name : {{projectName}}</label>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body">          
+              <table id="tbl" class="table table-bordered table-hover">
+                <thead>
+                <tr>
+                  <th>Member Name</th>
+                  <th>Member Email</th>
+                  <th>Role</th>
+                  {%if currentUserRole == True %}
+                  <th>Action</th>
+                  {%endif%}
+                </tr>
+                </thead>
+                <tbody>
+                  {% for value in projectsList %}
+                  <tr>
+                    {%if value[1] == currentUser %}
+                    <td>{{value[12]}} {{value[13]}} (Me)</td>
+                    {%else%}
+                    <td>{{value[12]}} {{value[13]}}</td>
+                    {%endif%}
+                    <td>{{value[1]}}</td>
+                    {%if value[2] == false %}
+                    <td>Member</td>
+                    {%else%}
+                    <td>Leader</td>
+                    {%endif%}
+                  
+                      {%if currentUserRole == true %}
+                      <td>              
+                        {%if value[2] == false %}
+                        <button type="submit" class="btn btn-danger" id="btnDelete" data-toggle="modal" onclick="setMemberEmail('{{value[2]}}' + ',' +'{{value[11]}}{{value[12]}}')" data-target="#modal-default">Delete 
+                          <i class="fa fa-remove"></i>
+                        </button>
+                        
+                        {%endif%}                 
+                      </td>
+                      {%endif%}
+                  </tr>
+                  {%endfor%}
+                </tbody>
+              </table>
+              <br>
+              <form method="GET" action="/ViewProject">
+                <button type="submit" class="btn btn-default">Back                
+                </button> 
+              </form>
+
+              </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal fade" id="modal-default">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span></button>
+              <h4 class="modal-title"><i class="fa fa-exclamation-circle"></i> Confirmation</h4>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to remove
+                <label id="memberName"></label> </p>                   
+            </div>
+            <div class="modal-footer">
+              <form method="POST" action="/ViewMembers">
+                <input type="hidden" id="memberEmail" name="memberEmail">
+                <button type="submit" class="btn btn-primary pull-left">Confirm</button>  
+              </form>                                           
+              <button type="submit" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>  
+
+      <div class="modal fade" id="modal-dismiss">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span></button>
+              <h4 class="modal-title"><i class="fa fa-exclamation-circle"></i> Confirmation</h4>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to dismiss Team {{teamName}} ?
+                </p>                   
+            </div>
+            <div class="modal-footer">
+              <form method="POST" action="/ViewProject">
+                <input type="hidden" name="purpose" value="dismiss">
+                <button type="submit" class="btn btn-primary pull-left">Confirm</button>  
+              </form>                                           
+              <button type="submit" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div> 
+</section>
+<script>
+  function setMemberEmail(details) {    
+    var fields = details.split(',');
+    var email = fields[0];
+    var name = fields[1].trim();
+    document.getElementById('memberEmail').value = email;    
+    document.getElementById('memberName').innerHTML = name + "?"; 
+  }
+</script>
+{% endblock %}
