@@ -46,7 +46,7 @@ def ViewProject():
 def NewSchedule():
     return render_template('NewSchedule.html')
 
-@app.route("/ViewRequest", methods=['GET', 'POST'])
+@app.route("/ViewRequest", methods=['GET' , 'POST'])
 def ViewRequest():
     return render_template('ViewRequest.html')
 
