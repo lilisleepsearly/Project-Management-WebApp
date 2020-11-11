@@ -53,10 +53,17 @@
                       {%if currentUserRole == true %}
                       <td>              
                         {%if value[2] == false %}
-                        <button type="submit" class="btn btn-danger" id="btnDelete" data-toggle="modal" onclick="setMemberEmail('{{value[2]}}' + ',' +'{{value[11]}}{{value[12]}}')" data-target="#modal-default">Delete 
-                          <i class="fa fa-remove"></i>
+                        <form action="/ViewMembers" method="POST" style="display: inline-block;">
+                          <input type="hidden" name="purpose" value="email">
+                          <input type="hidden" name="email" value="{{value[1]}}">
+                          <button type="submit" class="btn btn-primary" id="{{value[1]}}">
+                            <i class="fa fa-paper-plane"></i>
+                            <label style="font-weight: normal;" id='{{value[1]}}'>Send Reminder</label>
+                          </button>
+                        </form>
+                        <button type="submit" class="btn btn-danger" id="btnDelete" data-toggle="modal" onclick="setMemberEmail('{{value[2]}}' + ',' +'{{value[11]}}{{value[12]}}')" data-target="#modal-default">
+                          <i class="fa fa-remove"></i> Delete
                         </button>
-                        
                         {%endif%}                 
                       </td>
                       {%endif%}
@@ -70,12 +77,12 @@
                 </button> 
               </form>
 
-              {%if currentUserRole == true %}
+              <!-- {%if currentUserRole == true %}
               <form action="/ViewMember" method="POST" style="display: inline-block;">
                 <input type="hidden" name="purpose" value="email">
                 <button type="submit" class="btn btn-primary">Send reminder</button>
               </form>
-              {%endif%}
+              {%endif%} -->
               </div>
           </div>
         </div>
@@ -137,6 +144,11 @@
     var name = fields[1].trim();
     document.getElementById('memberEmail').value = email;    
     document.getElementById('memberName').innerHTML = name + "?"; 
+  }
+
+  function disable(email){
+    document.getElementById(email).disabled = true;
+    document.getElementById(email).innerHTML = 'Sent';
   }
 </script>
 {% endblock %}

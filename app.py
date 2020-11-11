@@ -44,16 +44,22 @@ def Login():
 @app.route("/SignUp", methods=['GET', 'POST'])
 def SignUp():
     if request.method == 'POST':
-        userFirstName = request.form["userFirstName"]
-        userLastName = request.form["userLastName"]
         userEmail = request.form["userEmail"]
-        userPassword = request.form["userPassword"]
-        session["userName"] = userFirstName
+        if checkEmailExists(userEmail):
+            flash('Email already registered!')
+            return render_template('SignUp.html')
+        else:
+            userFirstName = request.form["userFirstName"]
+            userLastName = request.form["userLastName"]
+            userPassword = request.form["userPassword"]
+            session["userName"] = getFullName(userEmail)
+            session["email"] = userEmail
 
-        #Store into database
-        hashedpw = str2hash(userPassword)
-        updateUser(userEmail,hashedpw,userFirstName,userLastName) 
-        return render_template('Login.html')
+            #Store into database
+            hashedpw = str2hash(userPassword)
+            updateUser(userEmail,hashedpw,userFirstName,userLastName) 
+            flash('Account Created!')
+            return render_template('ViewProject.html')
     
     else:
         return render_template('SignUp.html')
@@ -142,17 +148,22 @@ def ViewMembers():
         # POST Method, remove team member
         teamName = session['teamName']     
         projectID = session['projectID']
-        memberEmail = request.form['memberEmail']
-        projectName = request.form['projectName']
-        removeMember(projectID,memberEmail)
         if request.form['purpose'] == "email":
-            RemindTeam(projectID)
+            recipient = request.form['email']
+            RemindTeam(teamName,recipient)
             flash("Email sent!")
             projectsList = getProjectsByProjectID(session['projectID'])
-            projectList = projectsList.copy()
+            currentUserRole = getcurrentUserRole(projectsList, currentUser)
             return render_template('ViewMembers.html',projectName=session['projectName'], teamName = session['teamName'], projectID = session['projectID'], projectsList = projectsList, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail)
+        else:
+            memberEmail = request.form['memberEmail']
+            projectName = request.form['projectName']
+            removeMember(projectID,memberEmail)
     projectsList = getProjectsByProjectID(projectID)
-    
+    currentUserRole = getcurrentUserRole(projectsList, currentUser)
+    return render_template('ViewMembers.html',projectName=projectName, teamName = teamName, projectID = projectID, projectsList = projectsList, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail)
+
+def getcurrentUserRole(projectsList, currentUser):
     projectList = projectsList.copy()
     # get team 
     i = 0
@@ -168,8 +179,22 @@ def ViewMembers():
         i += 1
 
     currentUserRole = list(v[2] for v in projectsList if v[1] == currentUser)[0]
-    print(currentUserRole)
-    return render_template('ViewMembers.html',projectName=projectName, teamName = teamName, projectID = projectID, projectsList = projectsList, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail)
+    return(currentUserRole)
+
+
+def checkEmailExists(email):
+    emailList=[]
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute('SELECT Email FROM CZ2006.dbo.[User]')
+        data = cursor.fetchall()
+        for row in data:
+            emailList.append(row[0])
+        print(emailList)
+        if (email in emailList):
+            return True
+        else: 
+            return False
 
 def getFullName(email):
     name=''
@@ -274,37 +299,42 @@ def deleteUserProject(projectId):
         cursor = conx.cursor()
         cursor.execute("DELETE FROM UserProject WHERE ProjectID = ?" , projectId) 
 
-def RemindTeam(projectID):
+def RemindTeam(teamName, email):
 #    query = 'SELECT t1.UserEmail, t1.ScheduleName, t1.TeamName,  t1.Deadline, t1.ScheduleID FROM (SELECT ut.UserEmail, s.ScheduleID, ut.TeamID, t.TeamName,  s.ScheduleName, s.Deadline FROM dbo.UserTeam AS ut INNER JOIN [dbo].[Team] as t on ut.TeamID = t.TeamID INNER JOIN [dbo].[Schedule] AS s on t.TeamID = s.TeamID WHERE (GETDATE() BETWEEN DATEADD(day, -7, s.Deadline) AND s.Deadline) AND s.CheckSentMail = 0) t1 LEFT JOIN (SELECT s.TeamID, s.ScheduleID, uso.ShiftID, uso.Email FROM UserShiftOption AS uso INNER JOIN ShiftOption AS so ON uso.ShiftID = so.ShiftID INNER JOIN Schedule AS s ON so.ScheduleID = s.ScheduleID WHERE (GETDATE() BETWEEN DATEADD(day, -7, s.Deadline) AND s.Deadline) AND s.CheckSentMail = 0) t2 ON (t1.TeamID = t2.TeamID AND t1.UserEmail = t2.Email AND t1.ScheduleID = t2.ScheduleID) WHERE t2.TeamID IS NULL'
-    emailList = []
-    with pyodbc.connect(conx_string) as conx:
-        cursor = conx.cursor()
-        cursor.execute("select UserEmail from UserProject where ProjectID = ? and Status ='A' " , projectID) 
-        data = cursor.fetchall()
-        for row in data:
-            emailList.append(row[0])
-        print(emailList)
-    with pyodbc.connect(conx_string) as conx:
-        cursor = conx.cursor()
-        cursor.execute("select TeamName from Project where ProjectID = ?", projectID) 
-        data = cursor.fetchall()
-        teamName= data[0][0]
-    with app.app_context():
-        app.config['DEBUG'] = True 
-        app.config['TESTING'] = False
-        app.config['MAIL_SERVER']='smtp.gmail.com'
-        app.config['MAIL_PORT'] = 465
-        app.config['MAIL_USERNAME'] = 'formailsendingapp@gmail.com'
-        app.config['MAIL_PASSWORD'] = 'NTU2006!'
-        app.config['MAIL_DEFAULT_SENDER'] = 'formailsendingapp@gmail.com'
-        app.config['MAIL_USE_TLS'] = False
-        app.config['MAIL_USE_SSL'] = True
-        # for email in emailList:
-        mail = Mail(app) 
-        msg = Message('(Reminder) Schedule deadline!', recipients= emailList)
-        msg.body = 'Dear user, \n\nThis is a reminder for you to update your progress on your part of the project in team ' + str(teamName) + '. \n\nThank you'
-        mail.send(msg)
-    return True
+    emailList = [email]
+    print(emailList)
+    # with pyodbc.connect(conx_string) as conx:
+    #     cursor = conx.cursor()
+    #     cursor.execute("select UserEmail from UserProject where ProjectID = ? and Status ='A' " , projectID) 
+    #     data = cursor.fetchall()
+    #     for row in data:
+    #         emailList.append(row[0])
+    #     print(emailList)
+    # with pyodbc.connect(conx_string) as conx:
+    #     cursor = conx.cursor()
+    #     cursor.execute("select TeamName from Project where ProjectID = ?", projectID) 
+    #     data = cursor.fetchall()
+    #     teamName= data[0][0]
+    try:
+        with app.app_context():
+            app.config['DEBUG'] = True 
+            app.config['TESTING'] = False
+            app.config['MAIL_SERVER']='smtp.gmail.com'
+            app.config['MAIL_PORT'] = 465
+            app.config['MAIL_USERNAME'] = 'formailsendingapp@gmail.com'
+            app.config['MAIL_PASSWORD'] = 'NTU2006!'
+            app.config['MAIL_DEFAULT_SENDER'] = 'formailsendingapp@gmail.com'
+            app.config['MAIL_USE_TLS'] = False
+            app.config['MAIL_USE_SSL'] = True
+            # for email in emailList:
+            mail = Mail(app) 
+            msg = Message('(Reminder) Schedule deadline!', recipients= emailList)
+            msg.body = 'Dear user, \n\nThis is a reminder for you to update your progress on your part of the project in team ' + str(teamName) + '. \n\nThank you'
+            mail.send(msg)
+        return True
+    except:
+        pass
+    return False
 
 def updateUser(email, password, FirstName, LastName):
     with pyodbc.connect(conx_string) as conx:
