@@ -20,7 +20,6 @@ def Login():
         email = request.form["userEmail"]
         password = request.form["userPassword"]
         hashedpw= str2hash(password)
-        print(hashedpw)
         #check if email && password == user table data
         found_user = False
         try:
@@ -31,8 +30,10 @@ def Login():
             #store username into a session to be called in html
             session["userName"] = getFullName(email)
             session["email"] = email
-            print(session)
-            return render_template('ViewProject.html')
+            projectsList = getProjectsByUser(email)
+            roleType = "All"
+            return render_template('ViewProject.html', projectsList = projectsList, roleType = roleType)
+
         else:
             flash("Incorrect username or password", "info")
             return render_template("Login.html")
@@ -60,7 +61,7 @@ def SignUp():
 @app.route("/ViewProject", methods=['GET', 'POST'])
 def ViewProject():
     # Get projects by user email  
-    projectsList = getProjectsByUser('liyi@hotmail.com')
+    projectsList = getProjectsByUser(session["email"])
     roleType = "All"
     if request.method == "POST" :             
         purpose = request.form['purpose']
@@ -75,7 +76,7 @@ def ViewProject():
             # dismiss team
             projectID = session['projectID']
             deleteUserProject(projectID)
-            projectsList = getProjectsByUser('liyi@hotmail.com')
+            projectsList = getProjectsByUser(session["email"])
 
     return render_template('ViewProject.html', projectsList = projectsList, roleType = roleType)
 
@@ -126,7 +127,7 @@ def TaskDelegation():
 
 @app.route("/ViewMembers", methods=['GET', 'POST'])
 def ViewMembers(): 
-    currentUser = 'liyi@hotmail.com'
+    currentUser = session["email"]
     memberEmail = ''
     
     if request.method == "GET":       
@@ -135,6 +136,7 @@ def ViewMembers():
         projectName = request.args.get("projectName")
         session['teamName'] = teamName
         session['projectID'] = projectID
+        session['projectName'] = projectName
     else:
         
         # POST Method, remove team member
@@ -146,6 +148,9 @@ def ViewMembers():
         if request.form['purpose'] == "email":
             RemindTeam(projectID)
             flash("Email sent!")
+            projectsList = getProjectsByProjectID(session['projectID'])
+            projectList = projectsList.copy()
+            return render_template('ViewMembers.html',projectName=session['projectName'], teamName = session['teamName'], projectID = session['projectID'], projectsList = projectsList, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail)
     projectsList = getProjectsByProjectID(projectID)
     
     projectList = projectsList.copy()
@@ -185,7 +190,6 @@ def checkLogin(email,password):
         cursor = conx.cursor()
         cursor.execute('SELECT Password FROM CZ2006.dbo.[User] Where Email=?', email)
         data = cursor.fetchall()
-        print(data[0][0])
         if (password == data[0][0]):
             return True
         else: 
