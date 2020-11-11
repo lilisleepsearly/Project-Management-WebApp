@@ -44,7 +44,7 @@
                   </div>
                  
                 <div class="col-md-3">
-                      <textarea name="txtProjectDescription" id="tbProjectName" class="form-control" required></textarea>
+                      <textarea name="txtProjectDescription" id="tbDescription" class="form-control" required></textarea>
                   </div>
                   
             </div>
@@ -76,11 +76,11 @@
                         <td>{{value[0]}}</td>
                         <td>{{value[2]}} {{value[3]}}</td>
                         <td>
-                            <button type="submit" id="{{value[0]}}" value="{{value[4]}} {{value[5]}}" onclick="changeButtonStyle('{{value[0]}}')" class="btn btn-success"> 
+                            <button type="submit" id="{{value[0]}}" value="{{value[2]}} {{value[3]}}" onclick="changeButtonStyle('{{value[0]}}')" class="btn btn-success"> 
                                 <i class="fa fa-plus"></i> Invite
                             </button>
 
-                            <button type="submit" id="{{value[4]}} {{value[5]}}" onclick="displayInvite('{{value[0]}}')" style="display: none;" class="btn btn-danger"> 
+                            <button type="submit" id="{{value[2]}} {{value[3]}}" onclick="displayInvite('{{value[0]}}')" style="display: none;" class="btn btn-danger"> 
                                 <i class="fa fa-remove"></i> Uninvite
                             </button>
                         </td>                 
@@ -88,12 +88,15 @@
                       {%endfor%}
                     </tbody>
                   </table>
+                  Invited members : <label id="invitedMembers"></label>
                   <hr>
-                  <form action="/CreateTeam" method="POST" style="display: inline-block;">
+                  <form action="/TaskDelegation" method="POST" style="display: inline-block;">
                     <input type="hidden" id="memberEmail" name="emails">
                     <input type="hidden" id="teamName" name="teamName">
+                    <input type="hidden" id="description" name="description">
+                    <input type="hidden" id="projectName" name="projectName">
                     <button type="submit" class="btn btn-primary"> 
-                        Submit
+                        Next
                     </button>
                     </form>
                   <form action="/ViewProject" action="GET" style="display: inline-block;">
@@ -104,11 +107,14 @@
 
       </div>
 </section>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
+
 <script>
     var invitedMembers = [];
     function changeButtonStyle(memberEmail) {    
         invitedMembers.push(memberEmail);
-        document.getElementById('memberEmail').value = invitedMembers.toString();   
+        document.getElementById('memberEmail').value = invitedMembers.toString(); 
+        document.getElementById('invitedMembers').innerHTML =  invitedMembers.toString(); 
         document.getElementById(memberEmail).style.display = "none";
         var memberName = document.getElementById(memberEmail).value;
         document.getElementById(memberName).style.display = "block";
@@ -124,15 +130,21 @@
         document.getElementById(memberName).style.display = "none";
 
         document.getElementById('memberEmail').value = invitedMembers.toString();  
+        document.getElementById('invitedMembers').innerHTML = invitedMembers.toString(); 
     }
 
     document.getElementById('tbTeamName').addEventListener("change",function () {
       document.getElementById('teamName').value = document.getElementById('tbTeamName').value;
-    })
-  </script>
+    });
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-<script>
+    document.getElementById('tbDescription').addEventListener("change",function () {
+      document.getElementById('description').value = document.getElementById('tbDescription').value;
+    });
+
+    document.getElementById('tbProjectName').addEventListener("change",function () {
+      document.getElementById('projectName').value = document.getElementById('tbProjectName').value;
+    });
+
   $(function () {
     $('#tbl').DataTable({
       'paging'      : true,
@@ -140,14 +152,14 @@
       'searching'   : true,
       'ordering'    : true,
       'info'        : true,
-      'autoWidth'   : false
+      'autoWidth'   : false,
+      'pageLength' : 5
     })
-  })
+  });
 </script>
 <style>
     #tbl_filter{
         float:left;
-
     }
 
     div.dataTables_wrapper div.dataTables_filter input{
@@ -161,11 +173,6 @@
         border:1px solid #ccc;
         border-color: #d2d6de;
     }
-    /* .tbl{
-        border-radius: 0;
-        box-shadow: none;
-        border-color: #d2d6de;
-    } */
-</style>
+</style> 
 
 {% endblock %}

@@ -5,7 +5,8 @@ app = Flask(__name__)
 app.secret_key = 'ABCDEFG'
 
 # Database connection (change to your own connection string)
-conx_string = "driver={SQL SERVER}; server=aa14ghc88ioxf82.ci9f7zusg4md.ap-southeast-1.rds.amazonaws.com; database=CZ2006;UID=admin;PWD=9khnaai4"
+# conx_string = "driver={SQL SERVER}; server=aa14ghc88ioxf82.ci9f7zusg4md.ap-southeast-1.rds.amazonaws.com; database=CZ2006;UID=admin;PWD=9khnaai4"
+conx_string = "driver={SQL SERVER}; server=DESKTOP-6L4758E\SQLEXPRESS;database=CZ2006;"
 
 # Nav bar page change
 @app.route("/")
@@ -55,20 +56,28 @@ def CreateProject():
     currentUser = 'liyi@hotmail.com'
     usersList = allUser(currentUser)
 
-    # if request.method == "POST":
-    #     allEmails = request.form["emails"]
-    #     teamName = request.form["teamName"]
-
-    #     insertTeam(teamId, teamName)
-    #     # split by comma
-    #     emails = allEmails.split(",")
-    #     for email in emails :
-    #         insertUser(teamId,email, False, 'P')
+    if request.method == "POST":
+        allEmails = request.form["emails"]
+        teamName = request.form["teamName"]
+        description = request.form["description"]
+        projectName = request.form["projectName"]
         
-    #     insertUser(teamId,currentUser, True, 'P')
-    #     flash('Successfully created a team. Team ID : ' + teamId)
+        # insertTeam(teamId, teamName)
+        # split by comma
+        # emails = allEmails.split(",")
+        # for email in emails :
+        #     insertUser(teamId,email, False, 'P')
+        
+        # insertUser(teamId,currentUser, True, 'P')
+        
 
     return render_template('CreateProject.html', usersList = usersList)
+
+@app.route("/TaskDelegation", methods=['GET', 'POST'])
+def TaskDelegation():
+    currentUser = 'liyi@hotmail.com'
+
+    return render_template('TaskDelegation.html')
 
 @app.route("/ViewMembers", methods=['GET', 'POST'])
 def ViewMembers(): 
@@ -110,16 +119,6 @@ def ViewMembers():
     print(currentUserRole)
     return render_template('ViewMembers.html',projectName=projectName, teamName = teamName, projectID = projectID, projectsList = projectsList, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail)
 
-# def generateTeamId():
-#     teamsList = allTeams()
-#     teamId = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-#     hasTeamId = list(v[1] for v in teamsList if v[1] == teamId)
-#     while(len(hasTeamId) > 0):
-#         teamId = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-#         hasTeamId = list(v[1] for v in teamsList if v[1] == teamId)
-
-#     return teamId
-
 def getProjectsByUser(email):
     teamList = []
     with pyodbc.connect(conx_string) as conx:
@@ -153,7 +152,7 @@ def allUser(currentUser):
     usersList = []
     with pyodbc.connect(conx_string) as conx:
         cursor = conx.cursor()
-        cursor.execute("select * from [dbo].[User] where Email = ?" , currentUser) 
+        cursor.execute("select * from [dbo].[User] where Email != ?" , currentUser) 
         data = cursor.fetchall()
 
         for row in data:
