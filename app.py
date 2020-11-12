@@ -164,10 +164,7 @@ def ManageProject():
         if(projectID == None):
             projectID = session['ProjectID']
         
-        
-        hasAllIndicated = checkHasAllUserIndicate(projectID)
-        print(hasAllIndicated)
-
+    
         # back button
 
         # Get project member
@@ -183,6 +180,10 @@ def ManageProject():
         hasIndicated = checkHasIndicatedPreference(projectID, currentUser)
         if(hasIndicated):
             selectedRanks = getRankList(projectID, currentUser)
+        
+        hasAllIndicated = checkHasAllUserIndicate(projectID)
+        print("get")
+        print(projectID, hasAllIndicated, hasIndicated)
     else:
         
         purpose = request.form['purpose']
@@ -221,8 +222,10 @@ def ManageProject():
             i += 1
         
         hasIndicated = checkHasIndicatedPreference(projectID, currentUser)
+        print("post")
+        print(projectID, hasAllIndicated, hasIndicated)
     
-    return render_template('ManageProject.html',projectName=projectName, teamName = teamName, projectID = projectID, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail, taskList = taskList, isAllocated=isAllocated, hasResult = hasResult, selectedRanks=selectedRanks, hasIndicated = hasIndicated)
+    return render_template('ManageProject.html',projectName=projectName, teamName = teamName, projectID = projectID, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail, taskList = taskList, isAllocated=isAllocated, hasResult = hasResult, selectedRanks=selectedRanks, hasIndicated = hasIndicated, hasAllIndicated=hasAllIndicated)
     
 @app.route("/ViewMembers", methods=['GET', 'POST'])
 def ViewMembers(): 
@@ -428,6 +431,18 @@ def getMemberInProject(projectId):
     
     return userPreferenceList
 
+def getALLMemberInProject(projectId):
+    userPreferenceList = []
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select * from UserProject up where up.ProjectID = ?", projectId) 
+        data = cursor.fetchall()
+
+        for row in data:
+            userPreferenceList.append(row)
+    
+    return userPreferenceList
+
 def getUsersInPreference(projectId):
     userPreferenceList = []
     with pyodbc.connect(conx_string) as conx:
@@ -440,18 +455,26 @@ def getUsersInPreference(projectId):
     return userPreferenceList
 
 def checkHasAllUserIndicate(projectId):
-    membersList = getMemberInProject(projectId)
-    # print(membersList)
+    # with pyodbc.connect(conx_string) as conx:
+    #     cursor = conx.cursor()
+    #     cursor.execute("select * from Task t left join UserPreference up on t.TaskID=up.TaskID where ProjectID = ?", projectId) 
+    #     data = cursor.fetchall()
+    #     for row in data: 
+    #         print(row[3])   
+    #         if(row[3] is None):
+    #             return False
+    # return True
+    membersList = getALLMemberInProject(projectId)
+    print(membersList)
     indicatedUserList = getUsersInPreference(projectId)
-    # print(indicatedUserList)
+    print(indicatedUserList)
     
-    hasAllIndicated = True
     for member in membersList:
         if(member[1] not in indicatedUserList):
-            hasAllIndicated = False
+            return False
             # print(member[1])
 
-    return hasAllIndicated
+    return True
 
 if __name__ == '__main__':
     app.run()

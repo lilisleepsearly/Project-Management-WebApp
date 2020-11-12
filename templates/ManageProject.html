@@ -20,7 +20,8 @@
   </div>
   {% endfor %}
 
-  {%if hasIndicated == True %}
+  {%if hasIndicated == True  %}
+    {% if hasAllIndicated == False%}
   <div class="box box-solid" style="background-color:#DEF0D8 ; height: 100%;">
     <div class="box-header text-center">
       <h3 class="box-title" style="color: black; font-family:inherit; font-size: medium;"> Waiting for all users to indicate their preference...</h3>
@@ -31,19 +32,19 @@
       <!-- /.box-tools -->
     </div>
   </div>
-  {%endif%}
-<!-- 
-  {%if hasAllIndicated == True %}
-  <div class="box box-solid" style="background-color:#DEF0D8 ; height: 100%;">
-    <div class="box-header text-center">
-      <h3 class="box-title" style="color: black; font-family:inherit; font-size: medium;"> Roles allocated</h3>
-
-      <div class="box-tools pull-right">
-        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times" style="color:black;background-color: transparent;"></i></button>    
+    {%else%}
+    <div class="box box-solid" style="background-color:#DEF0D8 ; height: 100%;">
+      <div class="box-header text-center">
+        <h3 class="box-title" style="color: black; font-family:inherit; font-size: medium;"> Roles allocated</h3>
+  
+        <div class="box-tools pull-right">
+          <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times" style="color:black;background-color: transparent;"></i></button>    
+        </div>
       </div>
     </div>
-  </div>
-  {%endif%} -->
+    {%endif%}
+  {%endif%}
+
     <div class="row">
         <div class="col-xs-12">
           <div class="box" style="margin-top: 1%;">
