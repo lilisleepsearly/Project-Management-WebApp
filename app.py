@@ -5,8 +5,8 @@ app = Flask(__name__)
 app.secret_key = 'ABCDEFG'
 
 # Database connection (change to your own connection string)
-# conx_string = "driver={SQL SERVER}; server=aa14ghc88ioxf82.ci9f7zusg4md.ap-southeast-1.rds.amazonaws.com; database=CZ2006;UID=admin;PWD=9khnaai4"
-conx_string = "driver={SQL SERVER}; server=LAPTOP-FEUAEVTE\SQLEXPRESS;database=CZ2006;"
+conx_string = "driver={SQL SERVER}; server=aa14ghc88ioxf82.ci9f7zusg4md.ap-southeast-1.rds.amazonaws.com; database=CZ2006;UID=admin;PWD=9khnaai4"
+# conx_string = "driver={SQL SERVER}; server=LAPTOP-FEUAEVTE\SQLEXPRESS;database=CZ2006;"
 
 # Nav bar page change
 @app.route("/")
