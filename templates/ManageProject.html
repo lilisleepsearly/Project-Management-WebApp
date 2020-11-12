@@ -1,0 +1,120 @@
+{% extends "UserMaster.html" %}
+
+{% block content %}
+
+<section class="content-header">
+    <h1>Manage Project</h1>
+</section>
+
+<section class="content">
+  {% for message in get_flashed_messages() %}
+  <div class="box box-solid" style="background-color:#DEF0D8 ; height: 100%;">
+    <div class="box-header text-center">
+      <h3 class="box-title" style="color: black; font-family:inherit; font-size: medium;"> {{message}}</h3>
+
+      <div class="box-tools pull-right">
+        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times" style="color:black;background-color: transparent;"></i></button>    
+      </div>
+      <!-- /.box-tools -->
+    </div>
+  </div>
+  {% endfor %}
+
+  {%if hasIndicated == True%}
+  <div class="box box-solid" style="background-color:#DEF0D8 ; height: 100%;">
+    <div class="box-header text-center">
+      <h3 class="box-title" style="color: black; font-family:inherit; font-size: medium;"> Waiting for all users to indicate their preference...</h3>
+
+      <div class="box-tools pull-right">
+        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times" style="color:black;background-color: transparent;"></i></button>    
+      </div>
+      <!-- /.box-tools -->
+    </div>
+  </div>
+  {%endif%}
+    <div class="row">
+        <div class="col-xs-12">
+          <div class="box" style="margin-top: 1%;">
+            <div class="box-header">
+              
+              <form action="/ViewMembers" method="POST" style="display: inline-block;">
+                <input type="hidden" name="purpose" value="viewMember">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-users"></i>
+                    View Members
+                  </button> 
+            </form>      
+            {%if currentUserRole == True and hasResult == True %} 
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-pie-chart"></i>
+                    Generate Report
+                  </button>       
+                          
+              {%endif%}
+                <br><br>
+              <label style="font-size:16pt; margin-bottom: -20pt; font-weight: normal;">Project Name : {{projectName}}</label>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body">          
+              <table id="tbl" class="table table-bordered table-hover">
+                <thead>
+                <tr>
+                  <th>Role Description</th>
+
+                  {% if isAllocated == false %}
+                    <th>Rank</th>
+                    {%else%}
+                    <th>Allocation</th>
+                    {%endif%}
+                </tr>
+                </thead>
+                <tbody>
+                  
+                {% if isAllocated == false %}
+                  {% for value in taskList %}
+                  <tr>
+                      <td>
+                        {{value[2]}}
+                      </td>
+                      <td>
+                        <form method="POST" action="/ManageProject">                   
+                          {%if hasIndicated == false %}
+                          <select name="ddlRank" class="form-control select2" >
+                              <option value='1'>1</option>
+                              <option value = '2'>2</option>
+                              <option value = '3'>3</option>
+                              <option value = '4'>4</option>
+                              <option value = '5'>5</option>
+                          </select>
+                          {%else%}
+                              <label>{{selectedRanks[loop.index-1]}}</label>              
+                          {%endif%}
+                      </td>
+                  </tr>
+                  {%endfor%}
+                {%else%}
+
+                {%endif%}
+                </tbody>
+              </table>
+              <br>
+              
+                <input type="hidden" name="purpose" value="insertPreference">
+                {%if hasIndicated == false %}
+                <button type="submit" class="btn btn-primary">Submit                
+                </button> 
+                {%endif%}
+              </form>
+
+              <form method="GET" action="/ViewProject" style="display: inline-block;">
+                <button type="submit" class="btn btn-default">Back                
+                </button> 
+              </form>
+
+              </div>
+          </div>
+        </div>
+      </div>
+</section>
+
+{% endblock %}

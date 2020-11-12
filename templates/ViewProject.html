@@ -3,22 +3,10 @@
 {% block content %}
 
 <section class="content-header">
-    <h1>View My Projects</h1>
+    <h1>My Projects</h1>
 </section>
 
 <section class="content">
-  {% for message in get_flashed_messages() %}
-  <div class="box box-solid" style="background-color:#F6D6D9 ; height: 100%;">
-    <div class="box-header text-center">
-      <h3 class="box-title" style="color: black; font-family:inherit; font-size: medium;"> {{message}}</h3>
-
-      <div class="box-tools pull-right">
-        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times" style="color:darkred;background-color: transparent;"></i></button>    
-      </div>
-      <!-- /.box-tools -->
-    </div>
-  </div>
-  {% endfor %}
   <div class="box box-default">   
     <div class="box-header with-border">
       <h3 class="box-title">Manage Project</h3><br><br>
@@ -87,7 +75,11 @@
                 <i class="fa fa-users"></i>
                 {%endif%}
               </div>
-              <a href="{{ url_for('ViewMembers', teamName = team[8], projectID = team[4], projectName = team[6]) }}" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+              {%if team[2] == false %}
+              <a href="{{ url_for('ManageProject', teamName = team[8], projectID = team[4], projectName = team[6]) }}" class="small-box-footer">View Project <i class="fa fa-arrow-circle-right"></i></a>
+              {%else%}
+              <a href="{{ url_for('ManageProject', teamName = team[8], projectID = team[4], projectName = team[6]) }}" class="small-box-footer">Manage Project <i class="fa fa-arrow-circle-right"></i></a>
+              {%endif%}
             </div>
           </div>
           {%endfor%}

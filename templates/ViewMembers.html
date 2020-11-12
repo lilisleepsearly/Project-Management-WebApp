@@ -65,7 +65,7 @@
                 </tbody>
               </table>
               <br>
-              <form method="GET" action="/ViewProject">
+              <form method="GET" action="/ManageProject">
                 <button type="submit" class="btn btn-default">Back                
                 </button> 
               </form>
@@ -89,6 +89,7 @@
             <div class="modal-footer">
               <form method="POST" action="/ViewMembers">
                 <input type="hidden" id="memberEmail" name="memberEmail">
+                <input type="hidden" name="purpose" value="deleteMember">
                 <button type="submit" class="btn btn-primary pull-left">Confirm</button>  
               </form>                                           
               <button type="submit" class="btn btn-default" data-dismiss="modal">Close</button>

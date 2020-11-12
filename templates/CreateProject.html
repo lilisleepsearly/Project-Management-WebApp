@@ -8,12 +8,12 @@
 
 <section class="content">
   {% for message in get_flashed_messages() %}
-  <div class="box box-solid" style="background-color:#a3e4a3 ; height: 100%;">
+  <div class="box box-solid" style="background-color:#F6D6D9 ; height: 100%;">
     <div class="box-header text-center">
       <h3 class="box-title" style="color: black; font-family:inherit; font-size: medium;"> {{message}}</h3>
 
       <div class="box-tools pull-right">
-        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times" style="color:darkgreen;background-color: transparent;"></i></button>    
+        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times" style="color:darkred;background-color: transparent;"></i></button>    
       </div>
       <!-- /.box-tools -->
     </div>
@@ -23,7 +23,7 @@
         <div class="box-header with-border">
           <h3 class="box-title">New Project</h3>
         </div> 
-        
+       
           <div class="box-body">
             <div class="row">
                 <div class="col-md-2">             
@@ -95,6 +95,7 @@
                     <input type="hidden" id="teamName" name="teamName">
                     <input type="hidden" id="description" name="description">
                     <input type="hidden" id="projectName" name="projectName">
+                    <input type="hidden" name="purpose" value="check">
                     <button type="submit" class="btn btn-primary"> 
                         Next
                     </button>
@@ -104,7 +105,6 @@
                         Back
                       </button>
                 </form>
-
       </div>
 </section>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
