@@ -51,15 +51,6 @@ def ViewRequest():
 def CreateProject():
     currentUser = 'liyi@hotmail.com'
     usersList = allUser(currentUser)
-        
-        # insertTeam(teamId, teamName)
-        # split by comma
-        # emails = allEmails.split(",")
-        # for email in emails :
-        #     insertUser(teamId,email, False, 'P')
-        
-        # insertUser(teamId,currentUser, True, 'P')
-        
 
     return render_template('CreateProject.html', usersList = usersList)
 
@@ -120,8 +111,12 @@ def TaskDelegation():
                 allEmails = allEmails.split(',')
                 for email in allEmails:
                     insertUserProject(email, False, projectId)
-                noOfMembers = len(allEmails)
+
+                noOfMembers = len(allEmails) + 1
                 session['ProjectID'] = projectId
+                session['projectName'] = projectName
+                session['teamName'] = teamName
+
             session['noOfMembers'] = noOfMembers
         else:
             # delegate task
@@ -149,25 +144,35 @@ def ManageProject():
 
     if request.method == "GET":    
         projectID = request.args.get("projectID")
+        # on click from the manage/view project info page
+        
+        # if project id is not null, from view project's page
         if(projectID != None):   
             teamName = request.args.get("teamName")   
             projectName = request.args.get("projectName")
             session['teamName'] = teamName
+
+            # current onclick project
             session['projectID'] = projectID
+            session['ProjectID'] = projectID
             session['projectName'] = projectName
         else:
-            teamName = session['teamName'] 
+            teamName = session['teamName']            
             projectID = session['ProjectID'] 
             projectName = session['projectName']
             
         if(projectID == None):
             projectID = session['ProjectID']
         
+        
+        hasAllIndicated = checkHasAllUserIndicate(projectID)
+        print(hasAllIndicated)
+
         # back button
-        print("here" , projectID)
+
         # Get project member
         currentUserRole = getUserRoleByProjectID(projectID,currentUser)[0][2]
-        print("or here?")
+
         # Display tasks
         taskList = getTasksByProjectID(projectID)
         
@@ -180,12 +185,27 @@ def ManageProject():
             selectedRanks = getRankList(projectID, currentUser)
     else:
         
+        purpose = request.form['purpose']
         teamName = session['teamName'] 
-        projectID = session['ProjectID'] 
+        
+        if(purpose == "delegateTask"):
+            projectID = session['ProjectID'] 
+            print("deletgateTask" , projectID)
+        else:
+            projectID = session['ProjectID'] 
+            print("other project" , projectID)
+
         projectName = session['projectName']
-        currentUserRole = getUserRoleByProjectID(projectID,currentUser)[0][2]
+        print(projectID)
+        userRoleTemp = getUserRoleByProjectID(projectID,currentUser)
+       
+        if(len(userRoleTemp) == 0):
+            pass
+        else:
+            currentUserRole = getUserRoleByProjectID(projectID,currentUser)[0][2]
         # Display tasks
         taskList = getTasksByProjectID(projectID)
+        hasAllIndicated = checkHasAllUserIndicate(projectID)
         
         isAllocated = list(v for v in taskList)[0][3]
         if(isAllocated == None):
@@ -193,7 +213,7 @@ def ManageProject():
     
         # get options
         selectedRanks = request.form.getlist('ddlRank')
-        print(taskList)
+       
         i = 0
         # Indicate user preference
         for task in taskList:
@@ -243,9 +263,10 @@ def ViewMembers():
                 projectsList.insert(0,t)
             i += 1
 
+        print(projectsList)
         currentUserRole = list(v[2] for v in projectsList if v[1] == currentUser)[0]
-    else:
-        currentUserRole = getUserRoleByProjectID(projectID,currentUser)[0][2]
+    # else:
+    #     currentUserRole = getUserRoleByProjectID(projectID,currentUser)[0][2]
 
     return render_template('ViewMembers.html',projectName=projectName, teamName = teamName, projectID = projectID, projectsList = projectsList, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail)
 
@@ -395,5 +416,42 @@ def deleteUserProject(projectId):
         cursor = conx.cursor()
         cursor.execute("DELETE FROM UserProject WHERE ProjectID = ?" , projectId) 
         
+def getMemberInProject(projectId):
+    userPreferenceList = []
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select * from UserProject up where up.ProjectID = ? and Status = ?", projectId, 'A') 
+        data = cursor.fetchall()
+
+        for row in data:
+            userPreferenceList.append(row)
+    
+    return userPreferenceList
+
+def getUsersInPreference(projectId):
+    userPreferenceList = []
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select distinct(up.UserEmail) from UserPreference up inner join Task t on up.TaskID = t.TaskID where ProjectID = ?", projectId) 
+        data = cursor.fetchall()
+
+        for row in data:       
+            userPreferenceList.append(row[0])
+    return userPreferenceList
+
+def checkHasAllUserIndicate(projectId):
+    membersList = getMemberInProject(projectId)
+    # print(membersList)
+    indicatedUserList = getUsersInPreference(projectId)
+    # print(indicatedUserList)
+    
+    hasAllIndicated = True
+    for member in membersList:
+        if(member[1] not in indicatedUserList):
+            hasAllIndicated = False
+            # print(member[1])
+
+    return hasAllIndicated
+
 if __name__ == '__main__':
     app.run()

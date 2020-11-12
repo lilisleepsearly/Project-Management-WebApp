@@ -20,7 +20,7 @@
   </div>
   {% endfor %}
 
-  {%if hasIndicated == True%}
+  {%if hasIndicated == True %}
   <div class="box box-solid" style="background-color:#DEF0D8 ; height: 100%;">
     <div class="box-header text-center">
       <h3 class="box-title" style="color: black; font-family:inherit; font-size: medium;"> Waiting for all users to indicate their preference...</h3>
@@ -32,6 +32,18 @@
     </div>
   </div>
   {%endif%}
+<!-- 
+  {%if hasAllIndicated == True %}
+  <div class="box box-solid" style="background-color:#DEF0D8 ; height: 100%;">
+    <div class="box-header text-center">
+      <h3 class="box-title" style="color: black; font-family:inherit; font-size: medium;"> Roles allocated</h3>
+
+      <div class="box-tools pull-right">
+        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times" style="color:black;background-color: transparent;"></i></button>    
+      </div>
+    </div>
+  </div>
+  {%endif%} -->
     <div class="row">
         <div class="col-xs-12">
           <div class="box" style="margin-top: 1%;">
@@ -80,11 +92,9 @@
                         <form method="POST" action="/ManageProject">                   
                           {%if hasIndicated == false %}
                           <select name="ddlRank" class="form-control select2" >
-                              <option value='1'>1</option>
-                              <option value = '2'>2</option>
-                              <option value = '3'>3</option>
-                              <option value = '4'>4</option>
-                              <option value = '5'>5</option>
+                            {% for n in range(1, taskList|length + 1) %}
+                              <option value='{{n}}'>{{n}}</option>
+                            {%endfor%}
                           </select>
                           {%else%}
                               <label>{{selectedRanks[loop.index-1]}}</label>              
