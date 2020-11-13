@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, session, flash, redirect, url_for
 import pyodbc, string, random, hashlib
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
 app.secret_key = 'ABCDEFG'
@@ -303,11 +304,31 @@ def ViewMembers():
         projectName = session['projectName']
         purpose = request.form['purpose']
         
+        if (purpose == "email"):
+            recipient = request.form['email']
+            RemindTeam(teamName,recipient)
+            flash("Email sent!")
+            projectsList = getProjectsByProjectID(session['projectID'])
+            currentUserRole = getcurrentUserRole(projectsList, currentUser)
+            return render_template('ViewMembers.html',projectName=session['projectName'], teamName = session['teamName'], projectID = session['projectID'], projectsList = projectsList, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail)
         if(purpose == 'deleteMember') :
-            memberEmail = request.form['memberEmail']         
+            memberEmail = request.form['memberEmail']   
+            print(memberEmail)
+            print(projectID)       
             removeMember(projectID,memberEmail)
+            flash("Member removed!")
+            projectsList = getProjectsByProjectID(session['projectID'])
+            currentUserRole = getcurrentUserRole(projectsList, currentUser)
+            return render_template('ViewMembers.html',projectName=session['projectName'], teamName = session['teamName'], projectID = session['projectID'], projectsList = projectsList, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail)
         
     projectsList = getProjectsByProjectID(projectID)
+    currentUserRole = getcurrentUserRole(projectsList,currentUser)
+    # else:
+    #     currentUserRole = getUserRoleByProjectID(projectID,currentUser)[0][2]
+
+    return render_template('ViewMembers.html',projectName=projectName, teamName = teamName, projectID = projectID, projectsList = projectsList, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail)
+
+def getcurrentUserRole(projectsList, currentUser):
     if(len(projectsList) != 0):   
         projectList = projectsList.copy()
         # get team 
@@ -325,10 +346,8 @@ def ViewMembers():
 
         print(projectsList)
         currentUserRole = list(v[2] for v in projectsList if v[1] == currentUser)[0]
-    # else:
-    #     currentUserRole = getUserRoleByProjectID(projectID,currentUser)[0][2]
+    return(currentUserRole)
 
-    return render_template('ViewMembers.html',projectName=projectName, teamName = teamName, projectID = projectID, projectsList = projectsList, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail)
 
 def checkEmailExists(email):
     emailList=[]
