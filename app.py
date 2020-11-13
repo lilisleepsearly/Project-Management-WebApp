@@ -7,7 +7,7 @@ app.secret_key = 'ABCDEFG'
 
 # Database connection 
 #conx_string = "driver={SQL SERVER}; server=aa14ghc88ioxf82.ci9f7zusg4md.ap-southeast-1.rds.amazonaws.com; database=CZ2006;UID=admin;PWD=9khnaai4"
-conx_string = "driver={SQL SERVER}; server=DESKTOP-6L4758E\SQLEXPRESS;database=CZ2006;"
+conx_string = "driver={SQL SERVER}; server=DESKTOP-6LENMH4\SQLEXPRESS;database=CZ2006;"
 
 # Nav bar page change
 @app.route("/")
@@ -90,16 +90,20 @@ def ViewProject():
 @app.route("/ViewRequest", methods=['GET' , 'POST'])
 def ViewRequest():
     if request.method == "POST":
-        ProjectID = request.form['ProjectID']
+        
         email = session["email"]
-
         if request.form['purpose'] == "accept":
+            ProjectID = request.form["ProjectID1"]
+            print("Project id =" + str(ProjectID))
             acceptInv(ProjectID,email)
+            flash('accepted!')
             requestlist = getRequestList(email)
             return render_template('ViewRequest.html', requestlist=requestlist)
 
         if request.form['purpose'] == "dismiss":
+            ProjectID = request.form["ProjectID2"]
             declineInv(ProjectID,email)
+            flash('declined!')
             requestlist = getRequestList(email)
             return render_template('ViewRequest.html', requestlist=requestlist)
 
@@ -445,12 +449,12 @@ def getMembersByProjectID(projectId):
     teamList = []
     with pyodbc.connect(conx_string) as conx:
         cursor = conx.cursor()
-        cursor.execute("select * from  UserProject ut inner join Project t on ut.ProjectID = t.ProjectID inner join dbo.[User] u on u.Email = ut.UserEmail where ut.ProjectID = ? and (Status = ? or Status = '')" , projectId, 'P') 
+        cursor.execute("select * from  UserProject ut inner join Project t on ut.ProjectID = t.ProjectID inner join dbo.[User] u on u.Email = ut.UserEmail where ut.ProjectID = ?" , projectId) 
         data = cursor.fetchall()
 
         for row in data:
             teamList.append(row)
-
+    print("teamlist ="+ str(teamList))
     return teamList  
 
 def getUserRoleByProjectID(projectId, email):

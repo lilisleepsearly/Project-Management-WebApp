@@ -79,7 +79,9 @@
                             <i class="fa fa-paper-plane"></i>
                             <label style="font-weight: normal; display: initial;" id='{{value[1]}}'>Send Reminder</label>
                           </button>
-                          {%endif%}
+                        </form> 
+                        {%endif%}
+                        <!-- need this extra closing form if not pressing back will send email LOL -->
                         </form>
                         <button type="submit" class="btn btn-danger" id="btnDelete" data-toggle="modal" onclick="setMemberEmail('{{value[2]}}' + ',' +'{{value[12]}}{{value[13]}}')" data-target="#modal-default">
                           <i class="fa fa-remove"></i> Delete
@@ -161,15 +163,12 @@
 <script>
   function setMemberEmail(details) {    
     var fields = details.split(',');
+    print(fields)
     var email = fields[0];
     var name = fields[1].trim();
     document.getElementById('memberEmail').value = email;    
     document.getElementById('memberName').innerHTML = name + "?"; 
   }
 
-  function disable(email){
-    document.getElementById(email).disabled = true;
-    document.getElementById(email).innerHTML = 'Sent';
-  }
 </script>
 {% endblock %}
