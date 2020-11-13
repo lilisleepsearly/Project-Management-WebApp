@@ -7,7 +7,18 @@
 </section>
 
 <section class="content">
+  {% for message in get_flashed_messages() %}
+  <div class="box box-solid" style="background-color:#DEF0D8 ; height: 100%;">
+    <div class="box-header text-center">
+      <h3 class="box-title" style="color: black; font-family:inherit; font-size: medium;"> {{message}}</h3>
 
+      <div class="box-tools pull-right">
+        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times" style="color:black;background-color: transparent;"></i></button>    
+      </div>
+      <!-- /.box-tools -->
+    </div>
+  </div>
+  {% endfor %}
     <div class="row">
         <div class="col-xs-12">
           <div class="box" style="margin-top: 1%;">
@@ -53,10 +64,18 @@
                       {%if currentUserRole == true %}
                       <td>              
                         {%if value[2] == false %}
-                        <button type="submit" class="btn btn-danger" id="btnDelete" data-toggle="modal" onclick="setMemberEmail('{{value[1]}}' + ',' +'{{value[12]}}{{value[13]}}')" data-target="#modal-default">Delete 
-                          <i class="fa fa-remove"></i>
+                        <form action="/ViewMembers" method="POST" style="display: inline-block;">
+                          <input type="hidden" name="purpose" value="email">
+                          <input type="hidden" name="email" value="{{value[1]}}">
+                          <button type="submit" class="btn btn-primary" id="{{value[1]}}">
+                            <i class="fa fa-paper-plane"></i>
+                            <label style="font-weight: normal;" id='{{value[1]}}'>Send Reminder</label>
+                          </button>
+                        </form>
+                        <button type="submit" class="btn btn-danger" id="btnDelete" data-toggle="modal" onclick="setMemberEmail('{{value[2]}}' + ',' +'{{value[12]}}{{value[13]}}')" data-target="#modal-default">
+                          <i class="fa fa-remove"></i> Delete
                         </button>
-                        
+                        <!-- </form> -->
                         {%endif%}                 
                       </td>
                       {%endif%}
@@ -65,11 +84,17 @@
                 </tbody>
               </table>
               <br>
-              <form method="GET" action="/ManageProject">
+              <form method="GET" action="/ViewProject" style="display: inline-block;">
                 <button type="submit" class="btn btn-default">Back                
                 </button> 
               </form>
 
+              <!-- {%if currentUserRole == true %}
+              <form action="/ViewMember" method="POST" style="display: inline-block;">
+                <input type="hidden" name="purpose" value="email">
+                <button type="submit" class="btn btn-primary">Send reminder</button>
+              </form>
+              {%endif%} -->
               </div>
           </div>
         </div>
@@ -88,8 +113,8 @@
             </div>
             <div class="modal-footer">
               <form method="POST" action="/ViewMembers">
-                <input type="hidden" id="memberEmail" name="memberEmail">
                 <input type="hidden" name="purpose" value="deleteMember">
+                <input type="hidden" id="memberEmail" name="memberEmail">
                 <button type="submit" class="btn btn-primary pull-left">Confirm</button>  
               </form>                                           
               <button type="submit" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -132,6 +157,11 @@
     var name = fields[1].trim();
     document.getElementById('memberEmail').value = email;    
     document.getElementById('memberName').innerHTML = name + "?"; 
+  }
+
+  function disable(email){
+    document.getElementById(email).disabled = true;
+    document.getElementById(email).innerHTML = 'Sent';
   }
 </script>
 {% endblock %}
