@@ -41,6 +41,7 @@
                   <th>Member Name</th>
                   <th>Member Email</th>
                   <th>Role</th>
+                  <th>Status</th>
                   {%if currentUserRole == True %}
                   <th>Action</th>
                   {%endif%}
@@ -60,22 +61,29 @@
                     {%else%}
                     <td>Leader</td>
                     {%endif%}
-                  
+
+                    {%if value[3] == 'P' %}
+                    <td>Pending</td>
+                    
+                    {%else%}
+                    <td></td>
+                    {%endif%}
                       {%if currentUserRole == true %}
                       <td>              
                         {%if value[2] == false %}
                         <form action="/ViewMembers" method="POST" style="display: inline-block;">
                           <input type="hidden" name="purpose" value="email">
                           <input type="hidden" name="email" value="{{value[1]}}">
+                          {%if value[3] == 'A' %}
                           <button type="submit" class="btn btn-primary" id="{{value[1]}}">
                             <i class="fa fa-paper-plane"></i>
-                            <label style="font-weight: normal;" id='{{value[1]}}'>Send Reminder</label>
+                            <label style="font-weight: normal; display: initial;" id='{{value[1]}}'>Send Reminder</label>
                           </button>
+                          {%endif%}
                         </form>
                         <button type="submit" class="btn btn-danger" id="btnDelete" data-toggle="modal" onclick="setMemberEmail('{{value[2]}}' + ',' +'{{value[12]}}{{value[13]}}')" data-target="#modal-default">
                           <i class="fa fa-remove"></i> Delete
                         </button>
-                        <!-- </form> -->
                         {%endif%}                 
                       </td>
                       {%endif%}
@@ -84,7 +92,7 @@
                 </tbody>
               </table>
               <br>
-              <form method="GET" action="/ViewProject" style="display: inline-block;">
+              <form method="GET" action="/ManageProject" style="display: inline-block;">
                 <button type="submit" class="btn btn-default">Back                
                 </button> 
               </form>

@@ -5,9 +5,9 @@ from flask_mail import Mail, Message
 app = Flask(__name__)
 app.secret_key = 'ABCDEFG'
 
-# Database connection (change to your own connection string)
-conx_string = "driver={SQL SERVER}; server=aa14ghc88ioxf82.ci9f7zusg4md.ap-southeast-1.rds.amazonaws.com; database=CZ2006;UID=admin;PWD=9khnaai4"
-# conx_string = "driver={SQL SERVER}; server=LAPTOP-FEUAEVTE\SQLEXPRESS;database=CZ2006;"
+# Database connection 
+#conx_string = "driver={SQL SERVER}; server=aa14ghc88ioxf82.ci9f7zusg4md.ap-southeast-1.rds.amazonaws.com; database=CZ2006;UID=admin;PWD=9khnaai4"
+conx_string = "driver={SQL SERVER}; server=DESKTOP-6L4758E\SQLEXPRESS;database=CZ2006;"
 
 # Nav bar page change
 @app.route("/")
@@ -92,14 +92,17 @@ def ViewRequest():
     if request.method == "POST":
         ProjectID = request.form['ProjectID']
         email = session["email"]
+
         if request.form['purpose'] == "accept":
             acceptInv(ProjectID,email)
             requestlist = getRequestList(email)
             return render_template('ViewRequest.html', requestlist=requestlist)
+
         if request.form['purpose'] == "dismiss":
             declineInv(ProjectID,email)
             requestlist = getRequestList(email)
             return render_template('ViewRequest.html', requestlist=requestlist)
+
     email = session["email"]
     requestlist = getRequestList(email)
     return render_template('ViewRequest.html', requestlist=requestlist)
@@ -119,8 +122,8 @@ def TaskDelegation():
 
     if request.method == "POST":
         purpose = request.form["purpose"]
-        if(purpose != 'delegateTask'):
-            # create project page
+        if(purpose == "check"):
+            # create project, insert project members
             allEmails = request.form["emails"]
             teamName = request.form["teamName"]
             description = request.form["description"]
@@ -164,6 +167,7 @@ def TaskDelegation():
                 # insert project
                 insertProject(projectName, description, teamName)
                 projectId = getProjectID(projectName, description, teamName)[0][0]
+
                 # insert user project
                 insertUserProject(currentUser, True, projectId)
                 allEmails = allEmails.split(',')
@@ -171,6 +175,7 @@ def TaskDelegation():
                     insertUserProject(email, False, projectId)
 
                 noOfMembers = len(allEmails) + 1
+                # new project id inserted
                 session['ProjectID'] = projectId
                 session['projectName'] = projectName
                 session['teamName'] = teamName
@@ -188,7 +193,9 @@ def TaskDelegation():
                 # insert task into db
                 insertTask(session['ProjectID'], task)
 
+            # GET method
             return redirect(url_for('ManageProject'))
+            
            
     return render_template('TaskDelegation.html', usersList = usersList, noOfMembers=noOfMembers)
 
@@ -202,8 +209,6 @@ def ManageProject():
 
     if request.method == "GET":    
         projectID = request.args.get("projectID")
-        # on click from the manage/view project info page
-        
         # if project id is not null, from view project's page
         if(projectID != None):   
             teamName = request.args.get("teamName")   
@@ -215,22 +220,18 @@ def ManageProject():
             session['ProjectID'] = projectID
             session['projectName'] = projectName
         else:
+            # from the task delegation page
             teamName = session['teamName']            
             projectID = session['ProjectID'] 
             projectName = session['projectName']
-            
-        if(projectID == None):
-            projectID = session['ProjectID']
         
-    
-        # back button
-
         # Get project member
         currentUserRole = getUserRoleByProjectID(projectID,currentUser)[0][2]
 
         # Display tasks
         taskList = getTasksByProjectID(projectID)
         
+        # result has not been released
         isAllocated = list(v for v in taskList)[0][3]
         if(isAllocated == None):
             isAllocated = False
@@ -240,10 +241,8 @@ def ManageProject():
             selectedRanks = getRankList(projectID, currentUser)
         
         hasAllIndicated = checkHasAllUserIndicate(projectID)
-        print("get")
-        print(projectID, hasAllIndicated, hasIndicated)
+
     else:
-        
         purpose = request.form['purpose']
         teamName = session['teamName'] 
         
@@ -255,7 +254,7 @@ def ManageProject():
             print("other project" , projectID)
 
         projectName = session['projectName']
-        print(projectID)
+
         userRoleTemp = getUserRoleByProjectID(projectID,currentUser)
        
         if(len(userRoleTemp) == 0):
@@ -280,9 +279,7 @@ def ManageProject():
             i += 1
         
         hasIndicated = checkHasIndicatedPreference(projectID, currentUser)
-        print("post")
-        print(projectID, hasAllIndicated, hasIndicated)
-    
+
     return render_template('ManageProject.html',projectName=projectName, teamName = teamName, projectID = projectID, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail, taskList = taskList, isAllocated=isAllocated, hasResult = hasResult, selectedRanks=selectedRanks, hasIndicated = hasIndicated, hasAllIndicated=hasAllIndicated)
     
 @app.route("/ViewMembers", methods=['GET', 'POST'])
@@ -301,30 +298,24 @@ def ViewMembers():
         # POST Method, remove team member
         teamName = session['teamName']     
         projectID = session['projectID']
+
+        # View members
         projectName = session['projectName']
         purpose = request.form['purpose']
         
+       
         if (purpose == "email"):
             recipient = request.form['email']
             RemindTeam(teamName,recipient)
             flash("Email sent!")
-            projectsList = getProjectsByProjectID(session['projectID'])
-            currentUserRole = getcurrentUserRole(projectsList, currentUser)
-            return render_template('ViewMembers.html',projectName=session['projectName'], teamName = session['teamName'], projectID = session['projectID'], projectsList = projectsList, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail)
-        if(purpose == 'deleteMember') :
-            memberEmail = request.form['memberEmail']   
-            print(memberEmail)
-            print(projectID)       
-            removeMember(projectID,memberEmail)
-            flash("Member removed!")
-            projectsList = getProjectsByProjectID(session['projectID'])
-            currentUserRole = getcurrentUserRole(projectsList, currentUser)
-            return render_template('ViewMembers.html',projectName=session['projectName'], teamName = session['teamName'], projectID = session['projectID'], projectsList = projectsList, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail)
-        
-    projectsList = getProjectsByProjectID(projectID)
+       
+        elif(purpose == 'deleteMember') :
+            memberEmail = request.form['memberEmail']       
+            removeMember(projectID,memberEmail)            
+
+    projectsList = getMembersByProjectID(projectID)
+    
     currentUserRole = getcurrentUserRole(projectsList,currentUser)
-    # else:
-    #     currentUserRole = getUserRoleByProjectID(projectID,currentUser)[0][2]
 
     return render_template('ViewMembers.html',projectName=projectName, teamName = teamName, projectID = projectID, projectsList = projectsList, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail)
 
@@ -449,6 +440,18 @@ def getProjectsByProjectID(projectId):
             teamList.append(row)
 
     return teamList
+
+def getMembersByProjectID(projectId):
+    teamList = []
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select * from  UserProject ut inner join Project t on ut.ProjectID = t.ProjectID inner join dbo.[User] u on u.Email = ut.UserEmail where ut.ProjectID = ? and (Status = ? or Status = '')" , projectId, 'P') 
+        data = cursor.fetchall()
+
+        for row in data:
+            teamList.append(row)
+
+    return teamList  
 
 def getUserRoleByProjectID(projectId, email):
     with pyodbc.connect(conx_string) as conx:
@@ -580,15 +583,6 @@ def getUsersInPreference(projectId):
     return userPreferenceList
 
 def checkHasAllUserIndicate(projectId):
-    # with pyodbc.connect(conx_string) as conx:
-    #     cursor = conx.cursor()
-    #     cursor.execute("select * from Task t left join UserPreference up on t.TaskID=up.TaskID where ProjectID = ?", projectId) 
-    #     data = cursor.fetchall()
-    #     for row in data: 
-    #         print(row[3])   
-    #         if(row[3] is None):
-    #             return False
-    # return True
     membersList = getALLMemberInProject(projectId)
     print(membersList)
     indicatedUserList = getUsersInPreference(projectId)
@@ -597,7 +591,6 @@ def checkHasAllUserIndicate(projectId):
     for member in membersList:
         if(member[1] not in indicatedUserList):
             return False
-            # print(member[1])
 
     return True
 
