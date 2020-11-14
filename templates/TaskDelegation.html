@@ -15,6 +15,7 @@
             {%for i in range(1, noOfMembers+1)%} 
             <div class="row">
                 <form action="/TaskDelegation" method="POST">
+                  <input type="hidden" value="{{projectId}}" name="projectId">
                   <div class="col-md-2">             
                       <div class="form-group">
                         <label class="control-label" style="font-size: initial; padding-top: 5%;">Task {{i}} : </label>
@@ -35,9 +36,12 @@
                   </button>
               </form>
 
-              <button type="submit" class="btn btn-default"> 
+              <form action="/CreateProject" method="POST" style="display: inline-block;">
+                <button type="submit" class="btn btn-default"> 
                   Back
                 </button>
+              </form>
+
             </div>
 
       </div>

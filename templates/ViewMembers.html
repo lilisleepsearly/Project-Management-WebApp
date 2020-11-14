@@ -33,6 +33,7 @@
                 
               <label style="font-size:16pt; margin-bottom: -20pt; font-weight: normal;">Project Name : {{projectName}}</label>
             </div>
+           
             <!-- /.box-header -->
             <div class="box-body">          
               <table id="tbl" class="table table-bordered table-hover">
@@ -41,8 +42,9 @@
                   <th>Member Name</th>
                   <th>Member Email</th>
                   <th>Role</th>
-                  <th>Status</th>
                   {%if currentUserRole == True %}
+                  <th>Status</th>
+                  
                   <th>Action</th>
                   {%endif%}
                 </tr>
@@ -63,9 +65,8 @@
                     {%endif%}
 
                     {%if value[3] == 'P' %}
-                    <td>Pending</td>
-                    
-                    {%else%}
+                    <td>Pending</td>          
+                    {%else%} 
                     <td></td>
                     {%endif%}
                       {%if currentUserRole == true %}
@@ -81,7 +82,7 @@
                           </button>
                           {%endif%}
                         </form>
-                        <button type="submit" class="btn btn-danger" id="btnDelete" data-toggle="modal" onclick="setMemberEmail('{{value[2]}}' + ',' +'{{value[12]}}{{value[13]}}')" data-target="#modal-default">
+                        <button type="submit" class="btn btn-danger" id="btnDelete" data-toggle="modal" onclick="setMemberEmail('{{value[1]}}' + ',' +'{{value[12]}}{{value[13]}}')" data-target="#modal-default">
                           <i class="fa fa-remove"></i> Delete
                         </button>
                         {%endif%}                 
@@ -92,17 +93,12 @@
                 </tbody>
               </table>
               <br>
-              <form method="GET" action="/ManageProject" style="display: inline-block;">
+              <form method="POST" action="/ManageProject" style="display: inline-block;">
+                <input type="hidden" name="purpose" value="backToManage">
+                <input type="hidden" id="projectId" name="projectId" value="{{projectId}}">
                 <button type="submit" class="btn btn-default">Back                
                 </button> 
               </form>
-
-              <!-- {%if currentUserRole == true %}
-              <form action="/ViewMember" method="POST" style="display: inline-block;">
-                <input type="hidden" name="purpose" value="email">
-                <button type="submit" class="btn btn-primary">Send reminder</button>
-              </form>
-              {%endif%} -->
               </div>
           </div>
         </div>
@@ -123,6 +119,7 @@
               <form method="POST" action="/ViewMembers">
                 <input type="hidden" name="purpose" value="deleteMember">
                 <input type="hidden" id="memberEmail" name="memberEmail">
+                <input type="hidden" id="projectId" name="projectId" value="{{projectId}}">
                 <button type="submit" class="btn btn-primary pull-left">Confirm</button>  
               </form>                                           
               <button type="submit" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -148,6 +145,7 @@
             <div class="modal-footer">
               <form method="POST" action="/ViewProject">
                 <input type="hidden" name="purpose" value="dismiss">
+                <input type="hidden" name="projectId" value="{{projectId}}">
                 <button type="submit" class="btn btn-primary pull-left">Confirm</button>  
               </form>                                           
               <button type="submit" class="btn btn-default" data-dismiss="modal">Close</button>

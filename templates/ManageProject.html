@@ -30,6 +30,7 @@
         <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times" style="color:black;background-color: transparent;"></i></button>    
       </div>
       <!-- /.box-tools -->
+      
     </div>
   </div>
     {%else%}
@@ -46,29 +47,45 @@
   {%endif%}
 
     <div class="row">
-        <div class="col-xs-12">
-          <div class="box" style="margin-top: 1%;">
+        <div class="col-xs-12">          
+          {% if isAllocated == True %}
+          <div class="box collapsed-box" style="margin-top: 1%;">
+            {%else%}
+            <div class="box" style="margin-top: 1%;">
+              {%endif%}
             <div class="box-header">
-              
+              {% if isAllocated == True %}
+              <div class="box-tools pull-right">
+                <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i></button>
+                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-remove"></i></button>
+              </div>
+              {%endif%}
               <form action="/ViewMembers" method="POST" style="display: inline-block;">
                 <input type="hidden" name="purpose" value="viewMember">
+                <input type="hidden" name="projectId" value="{{projectId}}">
                 <button type="submit" class="btn btn-primary">
                     <i class="fa fa-users"></i>
                     View Members
                   </button> 
             </form>      
-            {%if currentUserRole == True and hasResult == True %} 
+            {%if currentUserRole == True and isAllocated == True %}
+              <form action="/GenerateReport" method="POST" style="display: inline-block;">
                 <button type="submit" class="btn btn-primary">
-                    <i class="fa fa-pie-chart"></i>
-                    Generate Report
-                  </button>       
-                          
+                  <i class="fa fa-pie-chart"></i>
+                  Generate Report
+                </button>   
+              </form> 
+                      
               {%endif%}
                 <br><br>
               <label style="font-size:16pt; margin-bottom: -20pt; font-weight: normal;">Project Name : {{projectName}}</label>
             </div>
             <!-- /.box-header -->
-            <div class="box-body">          
+            {% if isAllocated == True %}
+            <div class="box-body" style="display: none;">  
+              {%else%}
+              <div class="box-body">
+                {%endif%}         
               <table id="tbl" class="table table-bordered table-hover">
                 <thead>
                 <tr>
@@ -77,7 +94,7 @@
                   {% if isAllocated == false %}
                     <th>Rank</th>
                     {%else%}
-                    <th>Allocation</th>
+                    <th>Allocated To</th>
                     {%endif%}
                 </tr>
                 </thead>
@@ -86,11 +103,19 @@
                 {% if isAllocated == false %}
                   {% for value in taskList %}
                   <tr>
+                    {% if purpose == 'backToManage' or purpose == 'indicatePreference' or purpose == 'viewProject' or (purpose == 'insertPreference' and hasIndicated == True) %}
                       <td>
                         {{value[2]}}
                       </td>
+                      {%else%}
                       <td>
-                        <form method="POST" action="/ManageProject">                   
+                        {{value}}
+                      </td>
+                      {%endif%}
+                      <td>
+                        <form method="POST" action="/ManageProject">  
+                          <input type="hidden" value="indicatePreference" name="indicate">     
+                          <input type="hidden" value="{{projectId}}" name="projectId">                  
                           {%if hasIndicated == false %}
                           <select name="ddlRank" class="form-control select2" >
                             {% for n in range(1, taskList|length + 1) %}
@@ -104,28 +129,88 @@
                   </tr>
                   {%endfor%}
                 {%else%}
-
+                  {% for value in taskList %}
+                  <tr>                 
+                    <td>{{value[2]}}</td>
+                    <td>{{value[6]}} {{value[7]}}</td>             
+                  </tr>
+                  {%endfor%}
                 {%endif%}
                 </tbody>
               </table>
               <br>
               
                 <input type="hidden" name="purpose" value="insertPreference">
-                {%if hasIndicated == false %}
-                <button type="submit" class="btn btn-primary">Submit                
-                </button> 
-                {%endif%}
+                {% if hasAllIndicated == false %}
+                    {%if hasIndicated == false %}
+                    <button type="submit" class="btn btn-primary">Submit                
+                    </button> 
+                    {%endif%}
+                  {%endif%}
               </form>
 
+              {%if hasIndicated == True  %}
               <form method="GET" action="/ViewProject" style="display: inline-block;">
                 <button type="submit" class="btn btn-default">Back                
                 </button> 
               </form>
-
+              {% elif hasIndicated == False and purpose == 'viewProject' %}
+              <form method="GET" action="/ViewProject" style="display: inline-block;">
+                <button type="submit" class="btn btn-default">Back                
+                </button> 
+              </form>
+              {%else%}
+              <form method="POST" action="/TaskDelegation" style="display: inline-block;">
+                <input type="hidden" value="{{projectId}}" name="projectId"> 
+                <button type="submit" class="btn btn-default">Back                
+                </button> 
+              </form>
+              {%endif%}
               </div>
           </div>
         </div>
       </div>
+      {% if isAllocated == True %}
+
+      <div class="box box-primary">   
+        <div class="box-header with-border">
+          <div class="col-md-3">             
+            <div class="form-group">
+              <label class="control-label" style="font-size: initial; padding-top: 5%;">Enter Project Log : </label>
+            </div>              
+          </div>
+    
+        <div class="col-md-5">
+              <textarea style="width: 100%;"></textarea>
+          </div>
+          
+          <div class="col-md-3">
+            <button type="submit" class="btn btn-success">Submit</button>
+          </div>
+        
+        </div> 
+      <div class="box-body">
+        <label>Allocated Role : </label>
+      <div class="row">
+        <div class="col-xs-12">  
+        <table id="tbl2" class="table table-bordered table-hover">
+          <thead>
+          <tr>         
+              <th>Project Log Description</th>
+              <th>Created Date Time</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>   
+        </div>     
+      </div>
+      </div>
+      {%endif%}
 </section>
 
 {% endblock %}

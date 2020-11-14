@@ -76,9 +76,9 @@
                 {%endif%}
               </div>
               {%if team[2] == false %}
-              <a href="{{ url_for('ManageProject', teamName = team[8], projectTID = team[4], projectName = team[6]) }}" class="small-box-footer">View Project <i class="fa fa-arrow-circle-right"></i></a>
+              <a href="{{ url_for('ManageProject', teamName = team[8], projectId = team[4], projectName = team[6], purpose ='viewProject') }}" class="small-box-footer">View Project <i class="fa fa-arrow-circle-right"></i></a>
               {%else%}
-              <a href="{{ url_for('ManageProject', teamName = team[8], projectID = team[4], projectName = team[6]) }}" class="small-box-footer">Manage Project <i class="fa fa-arrow-circle-right"></i></a>
+              <a href="{{ url_for('ManageProject', teamName = team[8], projectId = team[4], projectName = team[6], purpose ='viewProject') }}" class="small-box-footer">Manage Project <i class="fa fa-arrow-circle-right"></i></a>
               {%endif%}
             </div>
           </div>
