@@ -60,13 +60,15 @@ def SignUp():
             userFirstName = request.form["userFirstName"]
             userLastName = request.form["userLastName"]
             userPassword = request.form["userPassword"]
-            session["userName"] = getFullName(userEmail)
-            session["email"] = userEmail
+            # session["userName"] = getFullName(userEmail)
+            # session["email"] = userEmail
 
             #Store into database
             hashedpw = str2hash(userPassword)
             updateUser(userEmail,hashedpw,userFirstName,userLastName) 
             flash('Account Created!')
+            session["userName"] = getFullName(userEmail)
+            session["email"] = userEmail
             return render_template('ViewProject.html')
     
     else:
@@ -453,10 +455,14 @@ def ViewMembers():
         # View members
         projectName = session['projectName']
         purpose = request.form['purpose']
+        print("1")
 
         if (purpose == "email"):
+            print("1")
             recipient = request.form['email']
+            print("1")
             RemindTeam(teamName,recipient)
+            print("1")
             flash("Email sent!")
        
         elif(purpose == 'deleteMember') :
@@ -966,4 +972,4 @@ def userAllocation(projectId):
         updateUserAllocated(memberEmail, projectId, taskId)
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

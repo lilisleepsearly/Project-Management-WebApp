@@ -27,26 +27,26 @@
         <div class="register-box-body">
           <p class="login-box-msg">Register as a new User</p>
           
-          <form action="/SignUp" method='POST'>
+          <form action="/SignUp" method='POST' onsubmit='return checkPasswordMatches();'>
             <input type="hidden" value="PersonalUserSignUp" name="pageName" />
             <div class="form-group has-feedback">
-              <input type="text" class="form-control" placeholder="First name" required="true" name="userFirstName">
+              <input type="text" class="form-control" placeholder="First name" required="true" name="userFirstName" maxlength="20">
               <span class="glyphicon glyphicon-user form-control-feedback"></span>
             </div>
             <div class="form-group has-feedback">
-              <input type="text" class="form-control" placeholder="Last name" required="true" name="userLastName">
+              <input type="text" class="form-control" placeholder="Last name" required="true" name="userLastName" maxlength="20">
               <span class="glyphicon glyphicon-user form-control-feedback"></span>
             </div>
             <div class="form-group has-feedback">
-              <input type="email" class="form-control" name="userEmail" placeholder="Email" required>
+              <input type="email" class="form-control" name="userEmail" placeholder="Email" required maxlength="20">
               <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
             </div>
             <div class="form-group has-feedback">
-              <input type="password" class="form-control" placeholder="Password" required="true" id="password" onkeyup='checkPasswordMatches();'>
+              <input type="password" class="form-control" placeholder="Password" required="true" id="password" maxlength="15">
               <span class="glyphicon glyphicon-lock form-control-feedback"></span>
             </div>
             <div class="form-group has-feedback">
-              <input type="password" class="form-control" name="userPassword" placeholder="Retype password" required="true" id="confirm_password" onkeyup='checkPasswordMatches();'>
+              <input type="password" class="form-control" name="userPassword" placeholder="Retype password" required="true" id="confirm_password" maxlength="15" >
               <span class="glyphicon glyphicon-log-in form-control-feedback"></span>
               <span id='message' name="msg"></span>
               <input type="hidden" name="hidden" />
@@ -61,4 +61,16 @@
   </div>
   </div>
 </section>
+<script>
+  function checkPasswordMatches(){
+    var password = document.getElementById('password');
+    var confirm  = document.getElementById('confirm_password');
+    if(password.value != confirm.value){
+      alert("Password does not match!");
+      return false;
+
+    }
+  }
+</script>
+
 {% endblock %}
