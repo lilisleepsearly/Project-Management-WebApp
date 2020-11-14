@@ -65,7 +65,9 @@
                     {%endif%}
 
                     {%if value[3] == 'P' %}
-                    <td>Pending</td>          
+                    <td>Pending</td>   
+                    {%elif value[3] == 'A' %} 
+                    <td>Approved</td>      
                     {%else%} 
                     <td></td>
                     {%endif%}
