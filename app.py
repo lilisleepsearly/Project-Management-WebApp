@@ -2,13 +2,18 @@ from flask import Flask, render_template, request, session, flash, redirect, url
 import pyodbc, string, random, hashlib
 from flask_mail import Mail, Message
 from datetime import datetime
+from scipy.optimize import linear_sum_assignment as la
+import numpy as np
+import scipy
 
 app = Flask(__name__)
 app.secret_key = 'ABCDEFG'
 
 # Database connection 
 #conx_string = "driver={SQL SERVER}; server=aa14ghc88ioxf82.ci9f7zusg4md.ap-southeast-1.rds.amazonaws.com; database=CZ2006;UID=admin;PWD=9khnaai4"
-conx_string = "driver={SQL SERVER}; server=DESKTOP-6LENMH4\SQLEXPRESS;database=CZ2006;"
+#conx_string = "driver={SQL SERVER}; server=DESKTOP-6LENMH4\SQLEXPRESS;database=CZ2006;"
+
+conx_string = "driver={SQL SERVER}; server=DESKTOP-6L4758E\SQLEXPRESS;database=CZ2006;"
 
 # Nav bar page change
 @app.route("/")
@@ -219,9 +224,8 @@ def ManageProject():
 
     if request.method == "GET":    
         projectId = request.args.get("projectId")
+
         purpose = request.args.get("purpose")
-        session['projectid'] = projectId
-        print(session['projectid'])
         # if project id is not null, from view project's page
         if(projectId != None):   
             teamName = request.args.get("teamName")   
@@ -236,6 +240,7 @@ def ManageProject():
             teamName = session['teamName']            
             projectId = request.form['projectId']
             projectName = session['projectName']
+        
         # Get project member, is leader == true
         currentUserRole = getUserRoleByProjectID(projectId,currentUser)[0][2]
 
@@ -246,6 +251,7 @@ def ManageProject():
         isAllocated = list(v for v in taskList)[0][3]
         if(isAllocated == None):
             isAllocated = False
+    
         else:
             # is allocated 
             taskList = getAllocationList(projectId)
@@ -254,23 +260,16 @@ def ManageProject():
         hasIndicated = checkHasIndicatedPreference(projectId, currentUser)
         if(hasIndicated):
             selectedRanks = getRankList(projectId, currentUser)
-        
-        hasAllIndicated = checkHasAllUserIndicate(projectId)
 
+        hasAllIndicated = checkHasAllUserIndicate(projectId)
+        if(hasAllIndicated):
+            userAllocation(projectId)
     else:
         purpose = request.form['purpose']
-        print(purpose)
         teamName = session['teamName'] 
-        print(teamName)
-        if (purpose=='newLog'):
-            taskid = request.form['TaskID']
-            log = request.form['log']
-            insertTaskLog(taskid,log)
-            flash('Log updated!')
-        projectId = session['projectid']
-        print(projectId)
+
+        projectId = request.form['projectId']
         projectName = session['projectName']
-        print(projectName)
 
         userRoleTemp = getUserRoleByProjectID(projectId,currentUser)
        
@@ -281,33 +280,133 @@ def ManageProject():
 
         # Display tasks
         taskList = getTasksByProjectID(projectId)
-        hasAllIndicated = checkHasAllUserIndicate(projectId)
         
         isAllocated = list(v for v in taskList)[0][3]
         if(isAllocated == None):
+    
             isAllocated = False      
         else:
             isAllocated = True
             taskList = getAllocationList(projectId)
         
-        if(purpose == 'indicate'):
-            # get options
-            selectedRanks = request.form.getlist('ddlRank')
+        # get options
+        selectedRanks = request.form.getlist('ddlRank')
 
-            if(len(selectedRanks) == 0):
-                selectedRanks = getRankList(projectId, currentUser)
-        
-            if(purpose != 'backToManage'):
-                i = 0
-                # Indicate user preference
-                for task in taskList:
-                    insertUserPreference(currentUser, task[0], selectedRanks[i])
-                    i += 1
-        
+        if(len(selectedRanks) == 0):
+            selectedRanks = getRankList(projectId, currentUser)
+       
+        if(purpose != 'backToManage'):
+            i = 0
+            # Indicate user preference
+            for task in taskList:
+                insertUserPreference(currentUser, task[0], selectedRanks[i])
+                i += 1
         hasIndicated = checkHasIndicatedPreference(projectId, currentUser)
-    projectLogList = getMemberProjectLog(projectId,currentUser)
-    grpProjectLog = getGrpProjectLog(projectId)
-    return render_template('ManageProject.html',projectName=projectName, teamName = teamName, projectId = projectId, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail, taskList = taskList, isAllocated=isAllocated, hasResult = hasResult, selectedRanks=selectedRanks, hasIndicated = hasIndicated, hasAllIndicated=hasAllIndicated, purpose = purpose,  projectLogList=projectLogList, grpProjectLog=grpProjectLog)
+        
+        hasAllIndicated = checkHasAllUserIndicate(projectId)
+        if(hasAllIndicated):
+            userAllocation(projectId)
+            isAllocated = True
+            hasResult = True
+            taskList = getTaskAllocated(projectId)         
+
+    return render_template('ManageProject.html',projectName=projectName, teamName = teamName, projectId = projectId, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail, taskList = taskList, isAllocated=isAllocated, hasResult = hasResult, selectedRanks=selectedRanks, hasIndicated = hasIndicated, hasAllIndicated=hasAllIndicated, purpose = purpose)
+# @app.route("/ManageProject", methods=['GET', 'POST'])
+# def ManageProject():
+#     currentUser = session['email']
+#     memberEmail = ''
+#     hasResult = False
+#     taskList = ''
+#     selectedRanks = ''
+
+#     if request.method == "GET":    
+#         projectId = request.args.get("projectId")
+#         purpose = request.args.get("purpose")
+#         # if project id is not null, from view project's page
+#         if(projectId != None):   
+#             teamName = request.args.get("teamName")   
+#             projectName = request.args.get("projectName")
+#             session['teamName'] = teamName
+            
+#             # current onclick project         
+#             session['projectName'] = projectName
+
+#         else:
+#             # from the task delegation page
+#             teamName = session['teamName']            
+#             projectId = request.form['projectId']
+#             projectName = session['projectName']
+#         # Get project member, is leader == true
+#         currentUserRole = getUserRoleByProjectID(projectId,currentUser)[0][2]
+
+#         # Display tasks
+#         taskList = getTasksByProjectID(projectId)
+        
+#         # result has not been released
+#         isAllocated = list(v for v in taskList)[0][3]
+#         if(isAllocated == None):
+#             isAllocated = False
+#         else:
+#             # is allocated 
+#             taskList = getAllocationList(projectId)
+#             isAllocated = True
+
+#         hasIndicated = checkHasIndicatedPreference(projectId, currentUser)
+#         if(hasIndicated):
+#             selectedRanks = getRankList(projectId, currentUser)
+        
+#         hasAllIndicated = checkHasAllUserIndicate(projectId)
+
+#     else:
+#         purpose = request.form['purpose']
+#         teamName = session['teamName'] 
+#         if (purpose=='newLog'):
+#             taskid = request.form['TaskID']
+#             log = request.form['log']
+#             insertTaskLog(taskid,log)
+#             flash('Log updated!')
+#         projectId = request.form['projectId']
+#         projectName = session['projectName']
+
+#         userRoleTemp = getUserRoleByProjectID(projectId,currentUser)
+       
+#         if(len(userRoleTemp) == 0):
+#             pass
+#         else:
+#             currentUserRole = getUserRoleByProjectID(projectId,currentUser)[0][2]
+
+#         # Display tasks
+#         taskList = getTasksByProjectID(projectId)
+#         hasAllIndicated = checkHasAllUserIndicate(projectId)
+        
+#         isAllocated = list(v for v in taskList)[0][3]
+#         if(isAllocated == None):
+#             isAllocated = False      
+#         else:
+#             isAllocated = True
+#             taskList = getAllocationList(projectId)
+        
+#         if(purpose == 'indicate'):
+#             # get options
+#             selectedRanks = request.form.getlist('ddlRank')
+
+#             if(len(selectedRanks) == 0):
+#                 selectedRanks = getRankList(projectId, currentUser)
+        
+#             if(purpose != 'backToManage'):
+#                 i = 0
+#                 # Indicate user preference
+#                 for task in taskList:
+#                     insertUserPreference(currentUser, task[0], selectedRanks[i])
+#                     i += 1
+        
+#         hasIndicated = checkHasIndicatedPreference(projectId, currentUser)
+#     projectLogList = getMemberProjectLog(projectId,currentUser)
+#     if(len(projectLogList) == 0):
+#         isAllocated = False
+
+#     grpProjectLog = getGrpProjectLog(projectId)
+#     return render_template('ManageProject.html',projectName=projectName, teamName = teamName, projectId = projectId, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail, taskList = taskList, isAllocated=isAllocated, hasResult = hasResult, selectedRanks=selectedRanks, hasIndicated = hasIndicated, hasAllIndicated=hasAllIndicated, purpose = purpose,  projectLogList=projectLogList, grpProjectLog=grpProjectLog)
     
 @app.route("/ViewMembers", methods=['GET', 'POST'])
 def ViewMembers(): 
@@ -588,6 +687,18 @@ def getMemberInProject(projectId):
     
     return userPreferenceList
 
+def getTaskAllocated(projectId):
+    userTaskList = []
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select * from Task t inner join [dbo].[User] u on t.UserAllocated = u.Email where t.ProjectID = ?", projectId) 
+        data = cursor.fetchall()
+
+        for row in data:
+            userTaskList.append(row)
+    
+    return userTaskList
+
 def getALLMemberInProject(projectId):
     userPreferenceList = []
     with pyodbc.connect(conx_string) as conx:
@@ -723,17 +834,70 @@ def getRequestList(email):
     reqList = []
     with pyodbc.connect(conx_string) as conx:
         cursor = conx.cursor()
-        # cursor.execute("SELECT * FROM CZ2006.dbo.UserProject Where UserEmail=? AND isLeader = 0 AND Status='P'" , email )
         cursor.execute("select Name,TeamName,UserEmail, p.ProjectID from Project p inner join UserProject up on p.ProjectId = up.ProjectID where p.ProjectID in ( SELECT p1.ProjectID FROM UserProject u1 inner join Project p1 on u1.ProjectID=p1.ProjectID Where UserEmail=? AND isLeader = 0 AND Status='P') and up.isLeader = 'true'", email)
-        # cursor.execute("SELECT p1.Name, p1.TeamName, p1.LeaderEmail FROM UserProject u1 inner join Project p1 on u1.ProjectID=p1.ProjectID Where UserEmail=? AND isLeader = 0 AND Status='P'" , email )
-        # not sure how to access TeamName with a nested query so im just using TeamID now
-        # cursor.execute('SELECT TeamName FROM CZ2006.dbo.Team WHERE TeamID= (SELECT TeamID FROM CZ2006.dbo.UserTeam Where UserEmail=? AND isManager = 1)', email)
         data = cursor.fetchall()
         for row in data:
             reqList.append(row)
         print(reqList)
     return reqList
+def getDistinctMemberList(projectId):
+    membersList = []
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select distinct(UserEmail) from UserPreference up inner join Task t on up.TaskID = t.TaskID where ProjectID=? order by UserEmail desc" , projectId) 
+        data = cursor.fetchall()
+        for row in data:
+            membersList.append(row[0])
 
+    return membersList
+
+def getTaskList(projectId):
+    taskIndexList = []
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select distinct(TaskID) from Task where ProjectID = ?" , projectId) 
+        data = cursor.fetchall()
+        for row in data:
+            taskIndexList.append(row[0])
+
+    return taskIndexList
+
+def updateUserAllocated(userEmail, projectId, taskId):
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("UPDATE Task SET UserAllocated = ? where ProjectID = ? and TaskID = ?",userEmail , projectId, taskId) 
+
+def getPrefByProjectID(projectId):
+    preferencelist = []
+    prefdict ={}
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select UserEmail,[Rank] from UserPreference up inner join Task t on up.TaskID = t.TaskID where ProjectID=?" , projectId) 
+        data = cursor.fetchall()
+        for row in data:
+            if row[0] in prefdict:
+                prefdict[row[0]].append(row[1])
+            else:
+                prefdict[row[0]]= [row[1]]
+    for keys in prefdict:
+        preferencelist.append(prefdict[keys])
+    return preferencelist 
+
+def userAllocation(projectId):
+    cost = np.array([[0, 0, 5], [0, 1, 3], [3, 2, 2]])
+    preferencelist =np.array(getPrefByProjectID(projectId))
+
+    row_id, col_id = la(preferencelist)
+
+    membersList = getDistinctMemberList(projectId)
+    taskIndexList = getTaskList(projectId)
+
+    for index in row_id:
+        memberEmail = membersList[index]
+        taskIndex = col_id[index]
+        taskId = taskIndexList[taskIndex]
+
+        updateUserAllocated(memberEmail, projectId, taskId)
 
 if __name__ == '__main__':
     app.run()
