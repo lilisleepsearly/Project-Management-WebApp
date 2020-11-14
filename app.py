@@ -1,13 +1,14 @@
 from flask import Flask, render_template, request, session, flash, redirect, url_for
 import pyodbc, string, random, hashlib
 from flask_mail import Mail, Message
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'ABCDEFG'
 
 # Database connection 
 #conx_string = "driver={SQL SERVER}; server=aa14ghc88ioxf82.ci9f7zusg4md.ap-southeast-1.rds.amazonaws.com; database=CZ2006;UID=admin;PWD=9khnaai4"
-conx_string = "driver={SQL SERVER}; server=DESKTOP-6L4758E\SQLEXPRESS;database=CZ2006;"
+conx_string = "driver={SQL SERVER}; server=DESKTOP-6LENMH4\SQLEXPRESS;database=CZ2006;"
 
 # Nav bar page change
 @app.route("/")
@@ -95,7 +96,7 @@ def ViewProject():
 @app.route("/ViewRequest", methods=['GET' , 'POST'])
 def ViewRequest():
     if request.method == "POST":
-        ProjectID = request.form['ProjectID']
+        ProjectID = request.form['projectId']
         email = session["email"]
 
         if request.form['purpose'] == "accept":
@@ -219,6 +220,8 @@ def ManageProject():
     if request.method == "GET":    
         projectId = request.args.get("projectId")
         purpose = request.args.get("purpose")
+        session['projectid'] = projectId
+        print(session['projectid'])
         # if project id is not null, from view project's page
         if(projectId != None):   
             teamName = request.args.get("teamName")   
@@ -256,9 +259,18 @@ def ManageProject():
 
     else:
         purpose = request.form['purpose']
+        print(purpose)
         teamName = session['teamName'] 
-        projectId = request.form['projectId']
+        print(teamName)
+        if (purpose=='newLog'):
+            taskid = request.form['TaskID']
+            log = request.form['log']
+            insertTaskLog(taskid,log)
+            flash('Log updated!')
+        projectId = session['projectid']
+        print(projectId)
         projectName = session['projectName']
+        print(projectName)
 
         userRoleTemp = getUserRoleByProjectID(projectId,currentUser)
        
@@ -278,22 +290,24 @@ def ManageProject():
             isAllocated = True
             taskList = getAllocationList(projectId)
         
-        # get options
-        selectedRanks = request.form.getlist('ddlRank')
+        if(purpose == 'indicate'):
+            # get options
+            selectedRanks = request.form.getlist('ddlRank')
 
-        if(len(selectedRanks) == 0):
-            selectedRanks = getRankList(projectId, currentUser)
-       
-        if(purpose != 'backToManage'):
-            i = 0
-            # Indicate user preference
-            for task in taskList:
-                insertUserPreference(currentUser, task[0], selectedRanks[i])
-                i += 1
+            if(len(selectedRanks) == 0):
+                selectedRanks = getRankList(projectId, currentUser)
+        
+            if(purpose != 'backToManage'):
+                i = 0
+                # Indicate user preference
+                for task in taskList:
+                    insertUserPreference(currentUser, task[0], selectedRanks[i])
+                    i += 1
         
         hasIndicated = checkHasIndicatedPreference(projectId, currentUser)
-
-    return render_template('ManageProject.html',projectName=projectName, teamName = teamName, projectId = projectId, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail, taskList = taskList, isAllocated=isAllocated, hasResult = hasResult, selectedRanks=selectedRanks, hasIndicated = hasIndicated, hasAllIndicated=hasAllIndicated, purpose = purpose)
+    projectLogList = getMemberProjectLog(projectId,currentUser)
+    grpProjectLog = getGrpProjectLog(projectId)
+    return render_template('ManageProject.html',projectName=projectName, teamName = teamName, projectId = projectId, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail, taskList = taskList, isAllocated=isAllocated, hasResult = hasResult, selectedRanks=selectedRanks, hasIndicated = hasIndicated, hasAllIndicated=hasAllIndicated, purpose = purpose,  projectLogList=projectLogList, grpProjectLog=grpProjectLog)
     
 @app.route("/ViewMembers", methods=['GET', 'POST'])
 def ViewMembers(): 
@@ -301,13 +315,6 @@ def ViewMembers():
     memberEmail = ''
 
     if request.method == "POST":     
-    #     projectID = request.args.get("projectID")   
-    #     teamName = request.args.get("teamName")   
-    #     projectName = request.args.get("projectName")
-    #     session['teamName'] = teamName
-    #     session['projectID'] = projectID
-    #     session['projectName'] = projectName
-    # else:
         # POST Method, remove team member
         teamName = session['teamName']     
         projectId = request.form['projectId']
@@ -671,6 +678,45 @@ def updateUser(email, password, FirstName, LastName):
                             VALUES(?,?,?,?)'''
         values = (email, password, FirstName, LastName)
         cursor.execute(insert_query,values)
+
+def getMemberProjectLog(ProjectId,memberemail):
+    projectlog= []
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select * from Task t inner join ProjectLog pl on t.TaskID=pl.TaskID where ProjectID=? and UserAllocated=? order by ProjectLogID desc", ProjectId, memberemail)
+        data = cursor.fetchall()
+        # print(data)
+        for row in data:
+            log = [row[0]]
+            log.append(row[2])
+            log.append(row[6])
+            log.append(row[7])
+            projectlog.append(log)
+        print(projectlog)
+        return projectlog
+
+def getGrpProjectLog(ProjectId):
+    projectlog= []
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select * from Task t inner join ProjectLog pl on t.TaskID=pl.TaskID where ProjectID=? order by ProjectLogID desc", ProjectId)
+        data = cursor.fetchall()
+        # print(data)
+        for row in data:
+            log = [row[0]]
+            log.append(row[2])
+            log.append(row[3])
+            log.append(row[6])
+            log.append(row[7])
+            projectlog.append(log)
+        print(projectlog)
+        return projectlog
+
+def insertTaskLog(taskId, log):
+    currentdate = datetime.today().strftime('%Y-%m-%d')
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("INSERT INTO ProjectLog(TaskID,[Log],CreationDate) VALUES(?,?,?)", (taskId, log, currentdate))
 
 
 def getRequestList(email):

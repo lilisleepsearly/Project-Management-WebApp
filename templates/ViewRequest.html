@@ -28,76 +28,93 @@
                             <td>{{rows[1]}}</td>
                             <td>{{rows[2]}}</td>
                             <td>
-                              <button type="submit" class="btn btn-success" data-toggle="modal" onclick="setTeamDetails('{{rows[0]}}' + ',' +'{{rows[1]}}')" data-target="#modal-confirm">Accept 
+                              <button type="submit" class="btn btn-success" data-toggle="modal" onclick="setTeamDetails('{{rows[3]}}' + ',' +'{{rows[1]}}')" data-target="#modal-confirm">Accept 
                                 <i class="fa fa-check"></i>
                               </button>
                               
-                              <button type="submit" class="btn btn-danger" data-toggle="modal" onclick="setTeamDetails('{{rows[0]}}' + ',' +'{{rows[1]}}')" data-target="#modal-reject">Reject 
+                              <button type="submit" class="btn btn-danger" data-toggle="modal" onclick="setTeamDetails('{{rows[3]}}' + ',' +'{{rows[1]}}')" data-target="#modal-reject">Reject 
                                 <i class="fa fa-remove"></i>
                               </button>
                             </td>
+                            
                           </tr>
-                          
-      <div class="modal fade" id="modal-confirm">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span></button>
-              <h4 class="modal-title"><i class="fa fa-exclamation-circle"></i> Confirmation</h4>
-            </div>
-            <div class="modal-body">
-              <p>Are you sure you want to accept invitation from
-                <label>{{rows[1]}}?</label>
-              </p>                   
-            </div>
-            <div class="modal-footer">
-              <form method="POST" action="/ViewRequest">
-                <input type="hidden" name="purpose" value="accept">
-                <input type="hidden" name="ProjectID" value="{{rows[3]}}">
-                <button type="submit" class="btn btn-primary pull-left">Confirm</button>  
-              </form>                                           
-              <button type="submit" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-          </div>
-          <!-- /.modal-content -->
-        </div>
-        <!-- /.modal-dialog -->
-      </div> 
 
-      <div class="modal fade" id="modal-reject">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span></button>
-              <h4 class="modal-title"><i class="fa fa-exclamation-circle"></i> Confirmation</h4>
-            </div>
-            <div class="modal-body">
-              <p>Are you sure you want to reject
-                <label>{{rows[1]}}?</label>
-                </p>                   
-            </div>
-            <div class="modal-footer">
-              <form method="POST" action="/ViewRequest">
-                <input type="hidden" name="purpose" value="dismiss">
-                <input type="hidden" name="ProjectID" value="{{rows[3]}}">
-                <button type="submit" class="btn btn-primary pull-left">Confirm</button>  
-              </form>                                           
-              <button type="submit" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
+        {%endfor%}
+      </tbody>
+      </table>
+    </div>
+    </div>
+    </div>
+    </div>                         
+    <div class="modal fade" id="modal-confirm">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title"><i class="fa fa-exclamation-circle"></i> Confirmation</h4>
           </div>
-          <!-- /.modal-content -->
+          <div class="modal-body">
+            <p>Are you sure you want to accept invitation from
+              <label id="teamNameA"></label>
+              
+            </p>                   
+          </div>
+          <div class="modal-footer">
+            <form method="POST" action="/ViewRequest">
+              <input type="hidden" name="purpose" value="accept">     
+              <input type="hidden" name="projectId" id="projectId1">     
+              <button type="submit" class="btn btn-primary pull-left">Confirm</button>  
+            </form>                                           
+            <button type="submit" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
         </div>
-        <!-- /.modal-dialog -->
-      </div> 
-                          {%endfor%}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            </div>
-            </div>
+        <!-- /.modal-content -->
+      </div>
+      <!-- /.modal-dialog -->
+    </div> 
+
+    <div class="modal fade" id="modal-reject">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title"><i class="fa fa-exclamation-circle"></i> Confirmation</h4>
+          </div>
+          <div class="modal-body">
+            <p>Are you sure you want to reject
+              <label id="teamNameR"></label>
+              
+              </p>                   
+          </div>
+          <div class="modal-footer">
+            <form method="POST" action="/ViewRequest">
+              <input type="hidden" name="purpose" value="dismiss">
+              <input type="hidden" name="projectId" id="projectId2">
+              <button type="submit" class="btn btn-primary pull-left">Confirm</button>  
+            </form>                                           
+            <button type="submit" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+        <!-- /.modal-content -->
+      </div>
+      <!-- /.modal-dialog -->
+    </div> 
+
+    <script>
+       function setTeamDetails(details){
+          var fields = details.split(',');
+          var projectId = fields[0].trim();
+          var teamName = fields[1].trim();
+
+          document.getElementById('teamNameA').innerHTML = teamName;
+          document.getElementById('projectId1').value = projectId;
+
+          document.getElementById('teamNameR').innerHTML = teamName;
+          document.getElementById('projectId2').value = projectId;
+       }
+    </script>
 </section>
 
 {% endblock %}

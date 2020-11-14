@@ -159,13 +159,18 @@
               <label class="control-label" style="font-size: 15pt;">Update Log : </label>
             </div>              
           </div>
-    
         <div class="col-md-5">
-              <textarea style="width: 100%;"></textarea>
+          <form method="POST" action="/ManageProject">
+              <textarea name="log" style="width: 100%;"></textarea>
           </div>
           
           <div class="col-md-4">
+          
+            <input type="hidden" name="purpose" value="newLog">
+            <input type="hidden" name="TaskID" value="{{projectLogList[0][0]}}">
             <button type="submit" class="btn btn-success">Submit</button>
+          </form>
+            
             <div class="pull-right">
               <button type="submit" class="btn btn-default" onclick="hideShowView()">
                 <i class="fa fa-eye" aria-hidden="true"></i>
@@ -175,7 +180,7 @@
 
         </div> 
       <div class="box-body">
-        <label>Allocated Role : </label>
+        <label>Allocated Role : {{projectLogList[0][1]}}</label>
       <div class="row">
         <div class="col-xs-12">  
         <table id="tbl2" class="table table-bordered table-hover">
@@ -187,11 +192,15 @@
           </tr>
           </thead>
           <tbody>
+            {% if projectLogList != none %}
+            {% for row in projectLogList %}
             <tr>
-              <td></td>
-              <td></td>
-              <td></td>
+              <td>{{row[2]}}</td>
+              <td>{{currentUser}}</td>
+              <td>{{row[3]}}</td>
             </tr>
+            {% endfor %}
+            {%endif%}
           </tbody>
         </table>   
         </div>     
@@ -231,11 +240,15 @@
           </tr>
           </thead>
           <tbody>
+            {% if grpProjectLog != none %}
+            {% for row in grpProjectLog %}
             <tr>
-              <td></td>
-              <td></td>
-              <td></td>
+              <td>{{row[1]}} : {{row[3]}}</td>
+              <td>{{row[2]}}</td>
+              <td>{{row[4]}}</td>
             </tr>
+            {% endfor %}
+            {%endif%}
           </tbody>
         </table>   
         </div>     
