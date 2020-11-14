@@ -5,7 +5,44 @@
     <h1>Project Work Summary</h1>
 </section>
 <section class="content">
-
+    <div class="box-body">
+    <div class="row">     
+        {% for user, details in grpSummary.items() %} 
+        <!-- <div class="row">      -->
+        <div class="col-md-4">    
+            <table class="table table-bordered table-hover" style="display: inline-table;"  > 
+                <thead>
+                    {%if user == leader %}
+                    <p>Name : {{user}} (Leader)
+                    {%else%}
+                    <p>Name : {{user}}
+                    {%endif%}
+                    {% for role, log in details.items() %}
+                        <br>
+                        Role : {{role}}
+                    </p>
+                <tr>
+                    <th>Task</th>
+                    <th>Date</th>
+                </tr>
+                </thead>
+                <tbody>
+                    {% for update in log %}
+                    {% for text, date in update.items() %}
+                    <tr>
+                        <td>{{text}}</td>
+                        <td>{{date}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- </div> -->
+        {% endfor %}
+    </div>
+    </div>
 </section>
 
 {% endblock %}

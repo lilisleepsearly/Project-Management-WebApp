@@ -11,9 +11,9 @@ app.secret_key = 'ABCDEFG'
 
 # Database connection 
 #conx_string = "driver={SQL SERVER}; server=aa14ghc88ioxf82.ci9f7zusg4md.ap-southeast-1.rds.amazonaws.com; database=CZ2006;UID=admin;PWD=9khnaai4"
-#conx_string = "driver={SQL SERVER}; server=DESKTOP-6LENMH4\SQLEXPRESS;database=CZ2006;"
+conx_string = "driver={SQL SERVER}; server=DESKTOP-6LENMH4\SQLEXPRESS;database=CZ2006;"
 
-conx_string = "driver={SQL SERVER}; server=DESKTOP-6L4758E\SQLEXPRESS;database=CZ2006;"
+# conx_string = "driver={SQL SERVER}; server=DESKTOP-6L4758E\SQLEXPRESS;database=CZ2006;"
 
 # Nav bar page change
 @app.route("/")
@@ -44,6 +44,8 @@ def Login():
             flash("Incorrect username or password", "info")
             return render_template("Login.html")
     else:
+        session.clear()
+        print("session cleared")
         return render_template('Login.html')
 
 
@@ -73,8 +75,14 @@ def SignUp():
 
 @app.route("/GenerateReport", methods=['GET', 'POST'])
 def GenerateReport():
+    if request.method == "POST":
+        projectID= request.form["projectId"]
+        print(projectID)
+        grpSummary= getSummaryDict(projectID)
+        # print(grpSummary)
+        leader= getLeaderByProjectID(projectID)
 
-    return render_template('GenerateReport.html')
+    return render_template('GenerateReport.html', grpSummary= grpSummary, leader=leader)
 
 @app.route("/ViewProject", methods=['GET', 'POST'])
 def ViewProject():
@@ -192,10 +200,12 @@ def TaskDelegation():
                 session['teamName'] = teamName
 
             session['noOfMembers'] = noOfMembers
+        elif (purpose=='delegate'):
+            noOfMembers = session['noOfMembers'] 
+            return render_template('TaskDelegation.html', usersList = usersList, noOfMembers=noOfMembers, projectId = projectId, purpose = purpose)
         else:
             # delegate task
             noOfMembers = session['noOfMembers'] 
-
             # get tasks
             taskList = []
             projectId = request.form['projectId']
@@ -221,10 +231,12 @@ def ManageProject():
     hasResult = False
     taskList = ''
     selectedRanks = ''
+    projectLogList= []
+    grpProjectLog =[]
 
     if request.method == "GET":    
         projectId = request.args.get("projectId")
-
+        
         purpose = request.args.get("purpose")
         # if project id is not null, from view project's page
         if(projectId != None):   
@@ -243,9 +255,11 @@ def ManageProject():
         
         # Get project member, is leader == true
         currentUserRole = getUserRoleByProjectID(projectId,currentUser)[0][2]
-
         # Display tasks
         taskList = getTasksByProjectID(projectId)
+        print(taskList)
+        noOfmembers = len(taskList)
+        session['noOfMembers'] = noOfmembers
         
         # result has not been released
         isAllocated = list(v for v in taskList)[0][3]
@@ -256,6 +270,7 @@ def ManageProject():
             # is allocated 
             taskList = getAllocationList(projectId)
             isAllocated = True
+            session['taskID']=getUserTaskID(projectId,currentUser)
 
         hasIndicated = checkHasIndicatedPreference(projectId, currentUser)
         if(hasIndicated):
@@ -264,12 +279,16 @@ def ManageProject():
         hasAllIndicated = checkHasAllUserIndicate(projectId)
         if(hasAllIndicated):
             userAllocation(projectId)
+        
     else:
         purpose = request.form['purpose']
+        print(purpose)
         teamName = session['teamName'] 
-
+        print(teamName)
         projectId = request.form['projectId']
+        print(projectId)
         projectName = session['projectName']
+        print(projectName)
 
         userRoleTemp = getUserRoleByProjectID(projectId,currentUser)
        
@@ -280,7 +299,7 @@ def ManageProject():
 
         # Display tasks
         taskList = getTasksByProjectID(projectId)
-        
+
         isAllocated = list(v for v in taskList)[0][3]
         if(isAllocated == None):
     
@@ -288,29 +307,42 @@ def ManageProject():
         else:
             isAllocated = True
             taskList = getAllocationList(projectId)
-        
+
         # get options
         selectedRanks = request.form.getlist('ddlRank')
 
         if(len(selectedRanks) == 0):
             selectedRanks = getRankList(projectId, currentUser)
        
-        if(purpose != 'backToManage'):
+        if(purpose == 'indicatePreference'):
             i = 0
             # Indicate user preference
             for task in taskList:
                 insertUserPreference(currentUser, task[0], selectedRanks[i])
                 i += 1
         hasIndicated = checkHasIndicatedPreference(projectId, currentUser)
-        
+        print(1)
         hasAllIndicated = checkHasAllUserIndicate(projectId)
         if(hasAllIndicated):
             userAllocation(projectId)
             isAllocated = True
             hasResult = True
-            taskList = getTaskAllocated(projectId)         
+            taskList = getTaskAllocated(projectId)
+        if (purpose=='newLog'):
+            taskid = session['taskID']
+            print(taskid)
+            log = request.form['log']
+            insertTaskLog(taskid,log)
+            flash('Log updated!')
+      
 
-    return render_template('ManageProject.html',projectName=projectName, teamName = teamName, projectId = projectId, currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail, taskList = taskList, isAllocated=isAllocated, hasResult = hasResult, selectedRanks=selectedRanks, hasIndicated = hasIndicated, hasAllIndicated=hasAllIndicated, purpose = purpose)
+    projectLogList = getMemberProjectLog(projectId,currentUser)
+    print(projectLogList)
+    grpProjectLog = getGrpProjectLog(projectId)
+    return render_template('ManageProject.html',projectName=projectName, teamName = teamName, projectId = projectId, 
+    currentUser=currentUser, currentUserRole=currentUserRole, memberEmail=memberEmail, taskList = taskList, 
+    isAllocated=isAllocated, hasResult = hasResult, selectedRanks=selectedRanks, hasIndicated = hasIndicated, 
+    hasAllIndicated=hasAllIndicated, purpose = purpose, projectLogList=projectLogList, grpProjectLog=grpProjectLog)
 # @app.route("/ManageProject", methods=['GET', 'POST'])
 # def ManageProject():
 #     currentUser = session['email']
@@ -468,7 +500,7 @@ def checkEmailExists(email):
         data = cursor.fetchall()
         for row in data:
             emailList.append(row[0])
-        print(emailList)
+        # print(emailList)
         if (email in emailList):
             return True
         else: 
@@ -724,9 +756,9 @@ def getUsersInPreference(projectId):
 
 def checkHasAllUserIndicate(projectId):
     membersList = getALLMemberInProject(projectId)
-    print(membersList)
+    # print(membersList)
     indicatedUserList = getUsersInPreference(projectId)
-    print(indicatedUserList)
+    # print(indicatedUserList)
     
     for member in membersList:
         if(member[1] not in indicatedUserList):
@@ -745,10 +777,17 @@ def getAllocationList(projectId):
             userAllocationList.append(row)
     return userAllocationList
 
+def getUserTaskID(projectId,email):
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select * from Task  where ProjectID=? and UserAllocated=? ", projectId, email) 
+        data = cursor.fetchall()
+        return data[0][0]
+
 def RemindTeam(teamName, email):
 #    query = 'SELECT t1.UserEmail, t1.ScheduleName, t1.TeamName,  t1.Deadline, t1.ScheduleID FROM (SELECT ut.UserEmail, s.ScheduleID, ut.TeamID, t.TeamName,  s.ScheduleName, s.Deadline FROM dbo.UserTeam AS ut INNER JOIN [dbo].[Team] as t on ut.TeamID = t.TeamID INNER JOIN [dbo].[Schedule] AS s on t.TeamID = s.TeamID WHERE (GETDATE() BETWEEN DATEADD(day, -7, s.Deadline) AND s.Deadline) AND s.CheckSentMail = 0) t1 LEFT JOIN (SELECT s.TeamID, s.ScheduleID, uso.ShiftID, uso.Email FROM UserShiftOption AS uso INNER JOIN ShiftOption AS so ON uso.ShiftID = so.ShiftID INNER JOIN Schedule AS s ON so.ScheduleID = s.ScheduleID WHERE (GETDATE() BETWEEN DATEADD(day, -7, s.Deadline) AND s.Deadline) AND s.CheckSentMail = 0) t2 ON (t1.TeamID = t2.TeamID AND t1.UserEmail = t2.Email AND t1.ScheduleID = t2.ScheduleID) WHERE t2.TeamID IS NULL'
     emailList = [email]
-    print(emailList)
+    # print(emailList)
     # with pyodbc.connect(conx_string) as conx:
     #     cursor = conx.cursor()
     #     cursor.execute("select UserEmail from UserProject where ProjectID = ? and Status ='A' " , projectID) 
@@ -790,6 +829,7 @@ def updateUser(email, password, FirstName, LastName):
         values = (email, password, FirstName, LastName)
         cursor.execute(insert_query,values)
 
+
 def getMemberProjectLog(ProjectId,memberemail):
     projectlog= []
     with pyodbc.connect(conx_string) as conx:
@@ -803,7 +843,7 @@ def getMemberProjectLog(ProjectId,memberemail):
             log.append(row[6])
             log.append(row[7])
             projectlog.append(log)
-        print(projectlog)
+        # print(projectlog)
         return projectlog
 
 def getGrpProjectLog(ProjectId):
@@ -820,7 +860,7 @@ def getGrpProjectLog(ProjectId):
             log.append(row[6])
             log.append(row[7])
             projectlog.append(log)
-        print(projectlog)
+        # print(projectlog)
         return projectlog
 
 def insertTaskLog(taskId, log):
@@ -838,7 +878,7 @@ def getRequestList(email):
         data = cursor.fetchall()
         for row in data:
             reqList.append(row)
-        print(reqList)
+        # print(reqList)
     return reqList
 def getDistinctMemberList(projectId):
     membersList = []
@@ -862,6 +902,16 @@ def getTaskList(projectId):
 
     return taskIndexList
 
+def getLeaderByProjectID(projectId):
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select * from  UserProject ut inner join Project t on ut.ProjectID = t.ProjectID inner join dbo.[User] u on u.Email = ut.UserEmail where ut.ProjectID = ?" , projectId) 
+        data = cursor.fetchall()
+
+        for row in data:
+            if (row[2] ==True):
+                return row[1]
+
 def updateUserAllocated(userEmail, projectId, taskId):
     with pyodbc.connect(conx_string) as conx:
         cursor = conx.cursor()
@@ -882,6 +932,22 @@ def getPrefByProjectID(projectId):
     for keys in prefdict:
         preferencelist.append(prefdict[keys])
     return preferencelist 
+
+def getSummaryDict(projectID):
+    summaryDict = {}
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select * from Task t inner join ProjectLog pl on t.TaskID=pl.TaskID where ProjectID=? order by pl.TaskID, ProjectLogID", projectID)
+        data = cursor.fetchall()
+        # print(data)
+        for row in data:
+            if row[3] in summaryDict:
+                summaryDict[row[3]][row[2]].append({row[6]:row[7]})
+            else:
+                summaryDict[row[3]]= {row[2]:[{row[6]:row[7]}]}
+
+        # print(summaryDict)
+        return summaryDict
 
 def userAllocation(projectId):
     cost = np.array([[0, 0, 5], [0, 1, 3], [3, 2, 2]])
