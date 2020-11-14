@@ -3,7 +3,7 @@
 {% block content %}
 
 <section class="content-header">
-    <h1>Manage Project</h1>
+    <h1>Project {{projectName}}</h1>
 </section>
 
 <section class="content">
@@ -57,7 +57,6 @@
               {% if isAllocated == True %}
               <div class="box-tools pull-right">
                 <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i></button>
-                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-remove"></i></button>
               </div>
               {%endif%}
               <form action="/ViewMembers" method="POST" style="display: inline-block;">
@@ -77,8 +76,6 @@
               </form> 
                       
               {%endif%}
-                <br><br>
-              <label style="font-size:16pt; margin-bottom: -20pt; font-weight: normal;">Project Name : {{projectName}}</label>
             </div>
             <!-- /.box-header -->
             {% if isAllocated == True %}
@@ -148,35 +145,18 @@
                     {%endif%}
                   {%endif%}
               </form>
-
-              {%if hasIndicated == True  %}
-              <form method="GET" action="/ViewProject" style="display: inline-block;">
-                <button type="submit" class="btn btn-default">Back                
-                </button> 
-              </form>
-              {% elif hasIndicated == False and purpose == 'viewProject' %}
-              <form method="GET" action="/ViewProject" style="display: inline-block;">
-                <button type="submit" class="btn btn-default">Back                
-                </button> 
-              </form>
-              {%else%}
-              <form method="POST" action="/TaskDelegation" style="display: inline-block;">
-                <input type="hidden" value="{{projectId}}" name="projectId"> 
-                <button type="submit" class="btn btn-default">Back                
-                </button> 
-              </form>
-              {%endif%}
               </div>
           </div>
         </div>
       </div>
+      
       {% if isAllocated == True %}
-
+      <div id="individualLogs">
       <div class="box box-primary">   
         <div class="box-header with-border">
           <div class="col-md-3">             
             <div class="form-group">
-              <label class="control-label" style="font-size: initial; padding-top: 5%;">Enter Project Log : </label>
+              <label class="control-label" style="font-size: 15pt;">Update Log : </label>
             </div>              
           </div>
     
@@ -184,10 +164,15 @@
               <textarea style="width: 100%;"></textarea>
           </div>
           
-          <div class="col-md-3">
+          <div class="col-md-4">
             <button type="submit" class="btn btn-success">Submit</button>
+            <div class="pull-right">
+              <button type="submit" class="btn btn-default" onclick="hideShowView()">
+                <i class="fa fa-eye" aria-hidden="true"></i>
+                Group View</button>
+            </div>
           </div>
-        
+
         </div> 
       <div class="box-body">
         <label>Allocated Role : </label>
@@ -196,12 +181,14 @@
         <table id="tbl2" class="table table-bordered table-hover">
           <thead>
           <tr>         
-              <th>Project Log Description</th>
-              <th>Created Date Time</th>
+              <th>Task</th>
+              <th>Name</th>
+              <th>Date Completed</th>
           </tr>
           </thead>
           <tbody>
             <tr>
+              <td></td>
               <td></td>
               <td></td>
             </tr>
@@ -210,7 +197,85 @@
         </div>     
       </div>
       </div>
+    </div>
+      </div>
       {%endif%}
-</section>
 
+      <div id="groupLogs" style="display: none;">
+      <div class="box box-primary">   
+        <div class="box-header with-border">
+          <div class="col-md-8">
+            <label style="font-size: 15pt;">
+              View Group Logs
+            </label>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="pull-right">
+              <button type="submit" class="btn btn-default" onclick="hideShowView()">
+                <i class="fa fa-eye" aria-hidden="true"></i>
+                Individual View</button>
+            </div>
+          </div>
+        </div> 
+      <div class="box-body">
+        
+      <div class="row">
+        <div class="col-xs-12">  
+        <table id="tbl2" class="table table-bordered table-hover">
+          <thead>
+          <tr>         
+            <th>Task</th>
+            <th>Name</th>
+            <th>Date Completed</th>
+          </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>   
+        </div>     
+      </div>
+      </div>
+      </div>
+    </div>
+    {%if hasIndicated == True  %}
+    <form method="GET" action="/ViewProject" style="display: inline-block;">
+      <button type="submit" class="btn btn-default">Back                
+      </button> 
+    </form>
+    {% elif hasIndicated == False and purpose == 'viewProject' %}
+    <form method="GET" action="/ViewProject" style="display: inline-block;">
+      <button type="submit" class="btn btn-default">Back                
+      </button> 
+    </form>
+    {%else%}
+    <form method="POST" action="/TaskDelegation" style="display: inline-block;">
+      <input type="hidden" value="{{projectId}}" name="projectId"> 
+      <button type="submit" class="btn btn-default">Back                
+      </button> 
+    </form>
+    {%endif%}
+</section>
+<script>
+function hideShowView() {
+  var x = document.getElementById("groupLogs");
+  if (x.style.display === "none") {
+    x.style.display = "block";
+  } else {
+    x.style.display = "none";
+  }
+
+  var y = document.getElementById("individualLogs");
+  if (y.style.display === "none") {
+    y.style.display = "block";
+  } else {
+    y.style.display = "none";
+  }
+}
+</script>
 {% endblock %}
