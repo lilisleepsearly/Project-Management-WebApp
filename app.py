@@ -86,10 +86,12 @@ def GenerateReport():
         leader= getLeaderByProjectID(projectID)
         datasets = getDataSet(projectID)
         labels = getLabels(projectID)
-        
+        totalTasks = 0
+        for d in datasets:
+            totalTasks+=d
         print(datasets, json.dumps(labels))
 
-    return render_template('GenerateReport.html', grpSummary= grpSummary, leader=leader, datasets=datasets, labels=json.dumps(labels))
+    return render_template('GenerateReport.html', grpSummary= grpSummary, leader=leader, datasets=datasets, labels=json.dumps(labels), totalTasks=totalTasks)
 
 @app.route("/ViewProject", methods=['GET', 'POST'])
 def ViewProject():
