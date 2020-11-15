@@ -82,14 +82,13 @@ def GenerateReport():
         projectID= request.form["projectId"]
         print(projectID)
         grpSummary= getSummaryDict(projectID)
-        # print(grpSummary)
+        print(grpSummary)
         leader= getLeaderByProjectID(projectID)
         datasets = getDataSet(projectID)
         labels = getLabels(projectID)
         totalTasks = 0
         for d in datasets:
             totalTasks+=d
-        print(datasets, json.dumps(labels))
 
     return render_template('GenerateReport.html', grpSummary= grpSummary, leader=leader, datasets=datasets, labels=json.dumps(labels), totalTasks=totalTasks)
 
@@ -987,14 +986,14 @@ def getSummaryDict(projectID):
     summaryDict = {}
     with pyodbc.connect(conx_string) as conx:
         cursor = conx.cursor()
-        cursor.execute("select * from Task t inner join ProjectLog pl on t.TaskID=pl.TaskID where ProjectID=? order by pl.TaskID, ProjectLogID", projectID)
+        cursor.execute("select * from Task t inner join ProjectLog pl on t.TaskID=pl.TaskID inner join [dbo].[User] u on t.UserAllocated = u.Email where ProjectID=? order by pl.TaskID, ProjectLogID", projectID)
         data = cursor.fetchall()
         # print(data)
         for row in data:
             if row[3] in summaryDict:
-                summaryDict[row[3]][row[2]].append({row[6]:row[7]})
+                summaryDict[row[10] + row[11]][row[2]].append({row[6]:row[7]})
             else:
-                summaryDict[row[3]]= {row[2]:[{row[6]:row[7]}]}
+                summaryDict[row[10] + row[11]]= {row[2]:[{row[6]:row[7]}]}
 
         # print(summaryDict)
         return summaryDict
