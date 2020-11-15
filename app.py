@@ -203,11 +203,13 @@ def TaskDelegation():
 
             session['noOfMembers'] = noOfMembers
         elif (purpose=='delegate'):
-            noOfMembers = session['noOfMembers'] 
+            noOfMembers = session['noOfMembers']
+            projectId = request.form['projectId']
             return render_template('TaskDelegation.html', usersList = usersList, noOfMembers=noOfMembers, projectId = projectId, purpose = purpose)
         else:
             # delegate task
             noOfMembers = session['noOfMembers'] 
+            currentUser = session['email']
             # get tasks
             taskList = []
             projectId = request.form['projectId']

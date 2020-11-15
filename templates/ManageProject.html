@@ -272,6 +272,11 @@
       <button type="submit" class="btn btn-default">Back                
       </button> 
     </form>
+    {% elif hasIndicated == False and purpose == 'backToManage' %}
+    <form method="GET" action="/ViewProject" style="display: inline-block;">
+      <button type="submit" class="btn btn-default">Back                
+      </button> 
+    </form>
     {%else%}
     <form method="POST" action="/TaskDelegation" style="display: inline-block;">
       <input type="hidden" value="delegate" name="purpose">
