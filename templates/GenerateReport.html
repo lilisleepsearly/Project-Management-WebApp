@@ -2,47 +2,105 @@
 
 {% block content %}
 <section class="content-header">
-    <h1>Project Work Summary</h1>
+    <h1>Project Summary Report</h1>
 </section>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <section class="content">
-    <div class="box-body">
-    <div class="row">     
+    <div class="row">
+        <div class="col-md-4">
+            <div class="box">
+              <div class="box-header">
+                <h3 class="box-title">Members contributions</h3>
+              </div>
+              <div class="box-body">
+                <canvas id="weightChart" style="width: 50%; height: 80%;"></canvas>
+                
+                  <script>
+                    var weightCanvas = document.getElementById("weightChart");
+                    // var _labels = JSON.parse('{{labels|safe}}');
+                    // var _datasets = JSON.parse('{{datasets|safe}}');
+                    labelsTemp = JSON.stringify('{{labels | safe}}');
+                    var array = []
+
+                    console.log(labelsTemp[0]);
+                    console.log(JSON.stringify('{{labels | safe}}'));
+                    // for (i = 0; i < labelsTemp.length; i++) {
+                    //     console.log(labelsTemp[i]);
+                    //     array.push(labelsTemp[i]);
+                    // }
+                    _labels =  JSON.stringify('{{labels | safe}}');
+                    _datasets = JSON.parse('{{datasets|safe}}');
+  
+                    var weightData = {
+                        labels: _labels,
+                        datasets: [
+                            {
+                                data: _datasets,
+                                backgroundColor: [
+                                    "#FF6384",
+                                    "#63FF84",
+                                    "#84FF63",
+                                    "#8463FF",
+                                    "#6384FF"
+                                ]
+                            }]
+                    };
+                      
+                    var pieChart = new Chart(weightCanvas, {
+                      type: 'pie',
+                      data: weightData
+                    });
+                  </script>
+
+                </div>
+              </div>
+          </div>
+    </div>
+    <div class="row">
         {% for user, details in grpSummary.items() %} 
-        <!-- <div class="row">      -->
-        <div class="col-md-4">    
-            <table class="table table-bordered table-hover" style="display: inline-table;"  > 
-                <thead>
-                    {%if user == leader %}
-                    <p>Name : {{user}} (Leader)
-                    {%else%}
-                    <p>Name : {{user}}
-                    {%endif%}
-                    {% for role, log in details.items() %}
-                        <br>
-                        Role : {{role}}
-                    </p>
-                <tr>
-                    <th>Task</th>
-                    <th>Date</th>
-                </tr>
-                </thead>
-                <tbody>
-                    {% for update in log %}
-                    {% for text, date in update.items() %}
-                    <tr>
-                        <td>{{text}}</td>
-                        <td>{{date}}</td>
-                    </tr>
-                    {% endfor %}
-                    {% endfor %}
-                    {% endfor %}
-                </tbody>
-            </table>
+            {% for role, log in details.items() %}
+            <div class="col-md-5">
+                <div class="box box-default">
+                    <div class="box-header">
+                        <div class="box-header text-center">
+                    <h3 class="box-title">
+                        {%if user == leader %}
+                        <p>Name : {{user}} (Leader)
+                        {%else%}
+                        <p>Name : {{user}}
+                        {%endif%}           
+                            <br>
+                            Role : {{role}}
+                        </p>
+                    </h3>
+                    </div>
+                </div>
+                    <!-- /.box-header -->
+                    <div class="box-body">
+                    <table class="table table-striped">
+                        <tr>
+                        <th>Task</th>
+                        <th>Date</th>
+                        </tr>
+                            {% for update in log %}
+                                {% for text, date in update.items() %}
+                                <tr>
+                                    <td>{{text}}</td>
+                                    <td>{{date}}</td>
+                                </tr>
+                                {% endfor %}
+                            {% endfor %}
+                                
+                        <tr>
+                    </table>
+                    </div>
+                    <!-- /.box-body -->
+                </div>
+            </div>
+            {% endfor %}
+          {% endfor %}
         </div>
-        <!-- </div> -->
-        {% endfor %}
-    </div>
-    </div>
 </section>
 
 {% endblock %}

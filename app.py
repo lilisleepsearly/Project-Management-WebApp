@@ -5,15 +5,16 @@ from datetime import datetime
 from scipy.optimize import linear_sum_assignment as la
 import numpy as np
 import scipy
+import json
 
 app = Flask(__name__)
 app.secret_key = 'ABCDEFG'
 
 # Database connection 
 #conx_string = "driver={SQL SERVER}; server=aa14ghc88ioxf82.ci9f7zusg4md.ap-southeast-1.rds.amazonaws.com; database=CZ2006;UID=admin;PWD=9khnaai4"
-conx_string = "driver={SQL SERVER}; server=DESKTOP-6LENMH4\SQLEXPRESS;database=CZ2006;"
+#conx_string = "driver={SQL SERVER}; server=DESKTOP-6LENMH4\SQLEXPRESS;database=CZ2006;"
 
-# conx_string = "driver={SQL SERVER}; server=DESKTOP-6L4758E\SQLEXPRESS;database=CZ2006;"
+conx_string = "driver={SQL SERVER}; server=DESKTOP-6L4758E\SQLEXPRESS;database=CZ2006;"
 
 # Nav bar page change
 @app.route("/")
@@ -83,8 +84,12 @@ def GenerateReport():
         grpSummary= getSummaryDict(projectID)
         # print(grpSummary)
         leader= getLeaderByProjectID(projectID)
+        datasets = getDataSet(projectID)
+        labels = getLabels(projectID)
+        
+        print(datasets, json.dumps(labels))
 
-    return render_template('GenerateReport.html', grpSummary= grpSummary, leader=leader)
+    return render_template('GenerateReport.html', grpSummary= grpSummary, leader=leader, datasets=datasets, labels=json.dumps(labels))
 
 @app.route("/ViewProject", methods=['GET', 'POST'])
 def ViewProject():
@@ -700,6 +705,29 @@ def insertUserPreference(email, taskId, rank):
         cursor = conx.cursor()
         cursor.execute("INSERT INTO UserPreference(UserEmail, TaskID, Rank) VALUES(?,?,?)", (email, taskId, rank))
 
+def getLabels(projectId):
+    userNameLabels = []
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select (TRIM(u.FirstName)+' ' +u.LastName) as FullName from [dbo].[User] u inner join (select distinct(UserAllocated) from Project p inner join Task t on p.ProjectID = t.ProjectID inner join ProjectLog pl on t.TaskID = pl.TaskID where p.ProjectID = ?) as p on u.Email = p.UserAllocated" , projectId) 
+        data = cursor.fetchall()
+
+        for row in data:
+            userNameLabels.append(row[0].strip())
+    
+    return userNameLabels
+
+def getDataSet(projectId):
+    userDataSet = []
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select count(*) as UserCount  from Project p inner join Task t on p.ProjectID = t.ProjectID inner join ProjectLog pl on t.TaskID = pl.TaskID where p.ProjectID = ? group by UserAllocated" , projectId) 
+        data = cursor.fetchall()
+
+        for row in data:
+            userDataSet.append(row[0])      
+    
+    return userDataSet
 
 def allTeams():
     teamsList = []
