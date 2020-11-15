@@ -223,7 +223,7 @@ def TaskDelegation():
             # Display tasks
             currentUserRole = getUserRoleByProjectID(projectId,currentUser)[0][2]
 
-            return render_template('ManageProject.html', projectId = projectId, currentUser=currentUser, currentUserRole=currentUserRole, taskList = taskList, isAllocated=False, hasResult = False , hasIndicated = False, hasAllIndicated=False, purpose = purpose)
+            return render_template('ManageProject.html', projectId = projectId, currentUser=currentUser, currentUserRole=currentUserRole, taskList = taskList, isAllocated=False, hasResult = False , hasIndicated = False, hasAllIndicated=False, purpose = 'backToManage')
             
            
     return render_template('TaskDelegation.html', usersList = usersList, noOfMembers=noOfMembers, projectId = projectId, purpose = purpose)
@@ -261,20 +261,23 @@ def ManageProject():
         currentUserRole = getUserRoleByProjectID(projectId,currentUser)[0][2]
         # Display tasks
         taskList = getTasksByProjectID(projectId)
-        print(taskList)
-        noOfmembers = len(taskList)
+        noOfmembers = getNoOfMember(projectId)
         session['noOfMembers'] = noOfmembers
         
         # result has not been released
-        isAllocated = list(v for v in taskList)[0][3]
-        if(isAllocated == None):
-            isAllocated = False
-    
-        else:
-            # is allocated 
-            taskList = getAllocationList(projectId)
-            isAllocated = True
-            session['taskID']=getUserTaskID(projectId,currentUser)
+        try:
+            isAllocated = list(v for v in taskList)[0][3]
+            if(isAllocated == None):
+                isAllocated = False
+            else:
+                # is allocated 
+                taskList = getAllocationList(projectId)
+                isAllocated = True
+                session['taskID']=getUserTaskID(projectId,currentUser)
+        except:
+            usersList = allUser(currentUser)
+            return render_template('TaskDelegation.html', usersList = usersList, noOfMembers=noOfmembers, projectId = projectId, purpose = "delegate")
+
 
         hasIndicated = checkHasIndicatedPreference(projectId, currentUser)
         if(hasIndicated):
@@ -726,6 +729,15 @@ def getMemberInProject(projectId):
             userPreferenceList.append(row)
     
     return userPreferenceList
+
+def getNoOfMember(projectId):
+    with pyodbc.connect(conx_string) as conx:
+        cursor = conx.cursor()
+        cursor.execute("select count(*) from UserProject where ProjectID = ?", projectId) 
+        data = cursor.fetchall()
+        print(data[0])
+    
+    return data[0][0]
 
 def getTaskAllocated(projectId):
     userTaskList = []
